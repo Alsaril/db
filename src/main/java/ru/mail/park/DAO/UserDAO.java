@@ -114,4 +114,17 @@ public class UserDAO {
         final List<User> following = template.query(query, userMapper, source.id);
         return following.stream().map(this::details).collect(Collectors.toList());
     }
+
+    public ExtendedUser follow(String follower, String followee) {
+        final User r = fromEmail(follower);
+        final User e = fromEmail(followee);
+        if (r == null || e == null || followee.equals(follower)) return null; //TODO differ equality
+
+        try {
+            final String query = "INSERT INTO follow (follower_id, followee_id) VALUES (?,?)";
+            template.update(query, r.id, e.id);
+        } catch (DuplicateKeyException ex) {
+        }
+        return details(r);
+    }
 }
