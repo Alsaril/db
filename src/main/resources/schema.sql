@@ -75,3 +75,12 @@ CREATE TABLE IF NOT EXISTS post_vote (
   FOREIGN KEY (post_id) REFERENCES post (id),
   FOREIGN KEY (user_id) REFERENCES user (id)
 );
+
+CREATE TABLE IF NOT EXISTS subscription (
+  id        INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  thread_id INT NOT NULL,
+  user_id   INT NOT NULL,
+  FOREIGN KEY (thread_id) REFERENCES thread (id),
+  FOREIGN KEY (user_id) REFERENCES user (id),
+  UNIQUE INDEX subscription_unique (thread_id, user_id)
+);
