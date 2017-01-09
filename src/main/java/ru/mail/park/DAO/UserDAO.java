@@ -87,10 +87,8 @@ public class UserDAO {
         return new ExtendedUser(user, followers, following, subscriptions);
     }
 
-    public List<ExtendedUser> listFollowing(String email, int limit, int since, String order) {
-        final User source = fromEmail(email);
-        if (source == null) return null;
-        StringBuffer query = new StringBuffer("SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM user u JOIN follow f ON u.id = f.followee_id WHERE follower_id = ?");
+    private String updateQuery(String source, int limit, int since, String order) {
+        final StringBuilder query = new StringBuilder(source);
         if (since != -1) {
             query.append(" and u.id > ").append(since);
         }
@@ -98,7 +96,22 @@ public class UserDAO {
         if (limit != -1) {
             query.append(" LIMIT ").append(limit);
         }
-        final List<User> following = template.query(query.toString(), userMapper, source.id);
+        return query.toString();
+    }
+
+    public List<ExtendedUser> listFollowing(String email, int limit, int since, String order) {
+        final User source = fromEmail(email);
+        if (source == null) return null;
+        final String query = updateQuery("SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM user u JOIN follow f ON u.id = f.followee_id WHERE follower_id = ?", limit, since, order);
+        final List<User> following = template.query(query, userMapper, source.id);
+        return following.stream().map(this::details).collect(Collectors.toList());
+    }
+
+    public List<ExtendedUser> listFollowers(String email, int limit, int since, String order) {
+        final User source = fromEmail(email);
+        if (source == null) return null;
+        final String query = updateQuery("SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM user u JOIN follow f ON u.id = f.follower_id WHERE followee_id = ?", limit, since, order);
+        final List<User> following = template.query(query, userMapper, source.id);
         return following.stream().map(this::details).collect(Collectors.toList());
     }
 }
