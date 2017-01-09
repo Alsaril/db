@@ -23,9 +23,6 @@ public class UserCreateRequest {
     }
 
     public boolean isValid() {
-        return !(StringUtils.isEmpty(username) ||
-                StringUtils.isEmpty(about) ||
-                StringUtils.isEmpty(name) ||
-                StringUtils.isEmpty(email));
+        return !StringUtils.isEmpty(email);
     }
 }

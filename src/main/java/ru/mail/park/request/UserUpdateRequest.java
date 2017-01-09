@@ -10,7 +10,7 @@ public class UserUpdateRequest {
 
     public UserUpdateRequest(@JsonProperty("about") String about,
                              @JsonProperty("name") String name,
-                             @JsonProperty("email") String email) {
+                             @JsonProperty("user") String email) {
         this.about = about;
         this.name = name;
         this.email = email;

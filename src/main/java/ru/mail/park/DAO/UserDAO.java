@@ -127,4 +127,15 @@ public class UserDAO {
         }
         return details(r);
     }
+
+    public ExtendedUser unfollow(String follower, String followee) {
+        final User r = fromEmail(follower);
+        final User e = fromEmail(followee);
+        if (r == null || e == null || followee.equals(follower)) return null; //TODO differ equality
+
+        final String query = "DELETE FROM follow WHERE follower_id = ? AND followee_id = ?;";
+        template.update(query, r.id, e.id);
+        return details(r);
+    }
+
 }

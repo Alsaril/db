@@ -41,7 +41,7 @@ public class UserController {
         return new CommonResponse<>(ResponseCode.OK, user).response();
     }
 
-    @RequestMapping(path = "db/api/user/update", method = RequestMethod.POST)
+    @RequestMapping(path = "db/api/user/updateProfile", method = RequestMethod.POST)
     public ResponseEntity update(@RequestBody String body) {
         final UserUpdateRequest uur = Utility.j2o(body, UserUpdateRequest.class);
         if (uur == null) {
@@ -69,12 +69,23 @@ public class UserController {
         return new CommonResponse<>(ResponseCode.OK, user).response();
     }
 
+
+    @RequestMapping(path = "db/api/user/follow", method = RequestMethod.POST)
+    public ResponseEntity follow(@RequestBody String body) {
+        return commonFollow(true, body);
+    }
+
+    @RequestMapping(path = "db/api/user/unfollow", method = RequestMethod.POST)
+    public ResponseEntity unfollow(@RequestBody String body) {
+        return commonFollow(false, body);
+    }
+
     @RequestMapping(path = "db/api/user/listFollowing", method = RequestMethod.GET)
     public ResponseEntity following(@RequestParam(name = "user") String email,
                                     @RequestParam(name = "limit", required = false) String limit,
                                     @RequestParam(name = "order", required = false) String order,
                                     @RequestParam(name = "since_id", required = false) String since) {
-        return commonFollow(true, email, limit, order, since);
+        return commonFollowList(true, email, limit, order, since);
     }
 
     @RequestMapping(path = "db/api/user/listFollowers", method = RequestMethod.GET)
@@ -82,11 +93,10 @@ public class UserController {
                                     @RequestParam(name = "limit", required = false) String limit,
                                     @RequestParam(name = "order", required = false) String order,
                                     @RequestParam(name = "since_id", required = false) String since) {
-        return commonFollow(false, email, limit, order, since);
+        return commonFollowList(false, email, limit, order, since);
     }
 
-    @RequestMapping(path = "db/api/user/follow", method = RequestMethod.POST)
-    public ResponseEntity follow(@RequestBody String body) {
+    private ResponseEntity commonFollow(boolean type, String body) {
         final FollowRequest fr = Utility.j2o(body, FollowRequest.class);
         if (fr == null) {
             return new SimpleResponse(ResponseCode.INVALID_REQUEST).response();
@@ -94,14 +104,14 @@ public class UserController {
         if (!fr.isValid()) {
             return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
         }
-        final ExtendedUser user = userDAO.follow(fr.follower, fr.followee);
+        final ExtendedUser user = type ? userDAO.follow(fr.follower, fr.followee) : userDAO.unfollow(fr.follower, fr.followee);
         if (user == null) {
             return new SimpleResponse(ResponseCode.NOT_FOUND).response();
         }
         return new CommonResponse<>(ResponseCode.OK, user).response();
     }
 
-    private ResponseEntity commonFollow(boolean type, String email, String strLimit, String order, String strSince) {
+    private ResponseEntity commonFollowList(boolean type, String email, String strLimit, String order, String strSince) {
         if (StringUtils.isEmpty(email)) {
             return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
         }
