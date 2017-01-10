@@ -5,16 +5,20 @@ CREATE TABLE IF NOT EXISTS user (
   name        VARCHAR(255) NULL,
   email       VARCHAR(255) NOT NULL UNIQUE,
   isAnonymous BOOLEAN      NOT NULL
-);
+)
+  CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS forum (
   id        INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  name      TEXT         NOT NULL,
+  name      VARCHAR(255) NOT NULL,
   shortname VARCHAR(255) NOT NULL,
   user_id   INT          NOT NULL,
   FOREIGN KEY (user_id) REFERENCES user (id),
   UNIQUE INDEX un_shortname(shortname)
-);
+)
+  CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS thread (
   id        INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -28,7 +32,9 @@ CREATE TABLE IF NOT EXISTS thread (
   slug      TEXT         NOT NULL,
   FOREIGN KEY (forum_id) REFERENCES forum (id),
   FOREIGN KEY (user_id) REFERENCES user (id)
-);
+)
+  CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS post (
   id            INT      NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -47,7 +53,9 @@ CREATE TABLE IF NOT EXISTS post (
   FOREIGN KEY (thread_id) REFERENCES thread (id),
   FOREIGN KEY (user_id) REFERENCES user (id),
   FOREIGN KEY (forum_id) REFERENCES forum (id)
-);
+)
+  CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS follow (
   id          INT NOT NULL AUTO_INCREMENT PRIMARY KEY,

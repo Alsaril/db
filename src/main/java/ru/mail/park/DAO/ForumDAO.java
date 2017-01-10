@@ -18,13 +18,14 @@ import java.sql.Statement;
 @Transactional
 public class ForumDAO {
     private final JdbcTemplate template;
+    private UserDAO userDAO;
 
-    public ForumDAO(JdbcTemplate template) {
+    public ForumDAO(JdbcTemplate template, UserDAO userDAO) {
         this.template = template;
+        this.userDAO = userDAO;
     }
 
-
-    public Forum<String> create(String name, String shortName, User user) {
+    public Forum<?> create(String name, String shortName, User user) {
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
             template.update(connection -> {
@@ -37,13 +38,13 @@ public class ForumDAO {
                 return pst;
             }, keyHolder);
         } catch (DuplicateKeyException e) {
-            return fromShortName(shortName);
+            return fromShortName(shortName, false);
         }
         return new Forum<>(keyHolder.getKey().intValue(), name, shortName, user.email);
     }
 
 
-    public Forum<String> fromShortName(String shortName) {
+    public Forum<?> fromShortName(String shortName, boolean includeUser) {
         try {
             return template.queryForObject(
                     "SELECT f.id AS id, f.name AS name, u.email AS email FROM forum f JOIN user u ON u.id = f.user_id WHERE f.shortname = ?",
@@ -51,7 +52,11 @@ public class ForumDAO {
                         final int id = rs.getInt("id");
                         final String name = rs.getString("name");
                         final String email = rs.getString("email");
-                        return new Forum<>(id, name, shortName, email);
+                        if (!includeUser) {
+                            return new Forum<>(id, name, shortName, email);
+                        } else {
+                            return new Forum<>(id, name, shortName, userDAO.details(email));
+                        }
                     }, shortName);
         } catch (EmptyResultDataAccessException e) {
             return null;

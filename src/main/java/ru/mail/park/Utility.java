@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.List;
 
 public class Utility {
 
@@ -26,5 +27,14 @@ public class Utility {
         } catch (IOException e) {
         }
         return result;
+    }
+
+    public static <T> boolean contains(List<T> list, T elem) {
+        for (T t : list) {
+            if (t.equals(elem)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
