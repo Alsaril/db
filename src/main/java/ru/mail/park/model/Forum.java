@@ -1,21 +1,15 @@
 package ru.mail.park.model;
 
-import ru.mail.park.Utility;
+public class Forum<T> {
+    public final int id;
+    public final String name;
+    public final String shortName;
+    public final T user;
 
-public class Forum {
-    public int id; //TODO set id
-    public String name;
-    public String shortName;
-    public Object user;
-
-    public Forum(String name, String shortName, Object user) {
+    public Forum(int id, String name, String shortName, T user) {
+        this.id = id;
         this.name = name;
         this.shortName = shortName;
         this.user = user;
-    }
-
-    @Override
-    public String toString() {
-        return Utility.o2j(this);
     }
 }

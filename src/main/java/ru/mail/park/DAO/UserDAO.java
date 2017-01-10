@@ -61,7 +61,7 @@ public class UserDAO {
         return details(email);
     }
 
-    private User fromEmail(String email) {
+    public User fromEmail(String email) {
         final User user;
         try {
             final String userQuery = "SELECT * FROM user WHERE email = ?";
