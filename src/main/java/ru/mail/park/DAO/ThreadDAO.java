@@ -1,5 +1,6 @@
 package ru.mail.park.DAO;
 
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -103,4 +104,23 @@ public class ThreadDAO {
         return template.update(query, id) != 0; //restore posts
     }
 
+    public boolean subscibe(String email, int id) { // 3 queries
+        final User user = userDAO.fromEmail(email);
+        final Thread<?, ?> thread = get(id, false, false);
+        if (user == null || thread == null) return false;
+        try {
+            final String query = "INSERT INTO subscription(user_id, thread_id) VALUES (?, ?)";
+            template.update(query, user.id, thread.id);
+        } catch (DuplicateKeyException e) {
+        }
+        return true;
+    }
+
+    public boolean unsubscibe(String email, int id) {
+        final User user = userDAO.fromEmail(email);
+        if (user == null) return false;
+        final String query = "DELETE FROM subscription WHERE user_id = ? AND thread_id = ?";
+        template.update(query, user.id, id);
+        return true;
+    }
 }

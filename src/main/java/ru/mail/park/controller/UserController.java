@@ -11,7 +11,6 @@ import ru.mail.park.request.FollowRequest;
 import ru.mail.park.request.UserCreateRequest;
 import ru.mail.park.request.UserUpdateRequest;
 import ru.mail.park.response.CommonResponse;
-import ru.mail.park.response.ResponseCode;
 import ru.mail.park.response.SimpleResponse;
 
 import java.util.List;
@@ -29,44 +28,44 @@ public class UserController {
     public ResponseEntity create(@RequestBody String body) {
         final UserCreateRequest ucr = Utility.j2o(body, UserCreateRequest.class);
         if (ucr == null) {
-            return new SimpleResponse(ResponseCode.INVALID_REQUEST).response();
+            return SimpleResponse.INVALID_REQUEST.response;
         }
         if (!ucr.isValid()) {
-            return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
+            return SimpleResponse.BAD_REQUEST.response;
         }
         final User user = userDAO.create(ucr.username, ucr.about, ucr.name, ucr.email, ucr.isAnonymous);
         if (user == null) {
-            return new SimpleResponse(ResponseCode.USER_EXISTS).response();
+            return SimpleResponse.USER_EXISTS.response;
         }
-        return new CommonResponse<>(ResponseCode.OK, user).response();
+        return new CommonResponse<>(SimpleResponse.OK, user).response();
     }
 
     @RequestMapping(path = "db/api/user/updateProfile", method = RequestMethod.POST)
     public ResponseEntity update(@RequestBody String body) {
         final UserUpdateRequest uur = Utility.j2o(body, UserUpdateRequest.class);
         if (uur == null) {
-            return new SimpleResponse(ResponseCode.INVALID_REQUEST).response();
+            return SimpleResponse.INVALID_REQUEST.response;
         }
         if (!uur.isValid()) {
-            return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
+            return SimpleResponse.BAD_REQUEST.response;
         }
         final ExtendedUser user = userDAO.update(uur.email, uur.name, uur.about);
         if (user == null) {
-            return new SimpleResponse(ResponseCode.NOT_FOUND).response();
+            return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(ResponseCode.OK, user).response();
+        return new CommonResponse<>(SimpleResponse.OK, user).response();
     }
 
     @RequestMapping(path = "db/api/user/details", method = RequestMethod.GET)
     public ResponseEntity details(@RequestParam(name = "user") String email) {
         if (StringUtils.isEmpty(email)) {
-            return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
+            return SimpleResponse.BAD_REQUEST.response;
         }
         final ExtendedUser user = userDAO.details(email);
         if (user == null) {
-            return new SimpleResponse(ResponseCode.NOT_FOUND).response();
+            return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(ResponseCode.OK, user).response();
+        return new CommonResponse<>(SimpleResponse.OK, user).response();
     }
 
 
@@ -99,21 +98,21 @@ public class UserController {
     private ResponseEntity commonFollow(boolean type, String body) {
         final FollowRequest fr = Utility.j2o(body, FollowRequest.class);
         if (fr == null) {
-            return new SimpleResponse(ResponseCode.INVALID_REQUEST).response();
+            return SimpleResponse.INVALID_REQUEST.response;
         }
         if (!fr.isValid()) {
-            return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
+            return SimpleResponse.BAD_REQUEST.response;
         }
         final ExtendedUser user = type ? userDAO.follow(fr.follower, fr.followee) : userDAO.unfollow(fr.follower, fr.followee);
         if (user == null) {
-            return new SimpleResponse(ResponseCode.NOT_FOUND).response();
+            return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(ResponseCode.OK, user).response();
+        return new CommonResponse<>(SimpleResponse.OK, user).response();
     }
 
     private ResponseEntity commonFollowList(boolean type, String email, String strLimit, String order, String strSince) {
         if (StringUtils.isEmpty(email)) {
-            return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
+            return SimpleResponse.BAD_REQUEST.response;
         }
 
         int limit = -1;
@@ -121,7 +120,7 @@ public class UserController {
             try {
                 limit = Integer.parseInt(strLimit);
             } catch (NumberFormatException e) {
-                return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
+                return SimpleResponse.BAD_REQUEST.response;
             }
         }
 
@@ -129,7 +128,7 @@ public class UserController {
             order = "desc";
         }
         if (!order.equals("desc") && !order.equals("asc")) {
-            return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
+            return SimpleResponse.BAD_REQUEST.response;
         }
 
         int since = -1;
@@ -137,14 +136,14 @@ public class UserController {
             try {
                 since = Integer.parseInt(strSince);
             } catch (NumberFormatException e) {
-                return new SimpleResponse(ResponseCode.BAD_REQUEST).response();
+                return SimpleResponse.BAD_REQUEST.response;
             }
         }
 
         final List<ExtendedUser> users = type ? userDAO.listFollowing(email, limit, since, order) : userDAO.listFollowers(email, limit, since, order);
         if (users == null) {
-            return new SimpleResponse(ResponseCode.NOT_FOUND).response();
+            return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(ResponseCode.OK, users).response();
+        return new CommonResponse<>(SimpleResponse.OK, users).response();
     }
 }

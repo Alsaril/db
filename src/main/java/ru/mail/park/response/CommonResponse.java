@@ -7,9 +7,13 @@ public class CommonResponse<T> {
     public final T response;
     public int code;
 
-    public CommonResponse(ResponseCode code, T response) {
+    public CommonResponse(SimpleResponse code, T response) {
         this.code = code.code;
         this.response = response;
+    }
+
+    public static <T> ResponseEntity<?> OK(T t) {
+        return new CommonResponse<T>(SimpleResponse.OK, t).response();
     }
 
     public ResponseEntity response() {
