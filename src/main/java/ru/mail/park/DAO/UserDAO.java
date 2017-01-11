@@ -8,12 +8,14 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.mail.park.Utility;
 import ru.mail.park.model.ExtendedUser;
 import ru.mail.park.model.User;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
@@ -100,48 +102,31 @@ public class UserDAO {
         final String followingQuery = "SELECT u.email FROM user u JOIN follow f ON u.id = f.followee_id WHERE follower_id = ?";
         final List<String> following = template.queryForList(followingQuery, String.class, user.id);
         final String subscrQuery = "SELECT thread_id FROM subscription WHERE user_id = ?";
-        final List<String> subscriptions = template.queryForList(subscrQuery, String.class, user.id);
+        final List<Integer> subscriptions = template.queryForList(subscrQuery, Integer.class, user.id);
         return new ExtendedUser(user, followers, following, subscriptions);
     }
 
     private String updateQuery(String source, int limit, int since, String order) {
         final StringBuilder query = new StringBuilder(source);
         if (since != -1) {
-            query.append(" and u.id > ").append(since);
+            query.append(" and u.id >= ").append(since);
         }
-        query.append(" ORDER BY 1 ").append(order);
+        query.append(" ORDER BY name ").append(order);
         if (limit != -1) {
             query.append(" LIMIT ").append(limit);
         }
         return query.toString();
     }
 
-    /**
-     * (3 * n) queries
-     *
-     * @param email
-     * @param limit
-     * @param since
-     * @param order
-     * @return listFollowing
-     */
     public List<ExtendedUser> listFollowing(String email, int limit, int since, String order) {
         final User source = fromEmail(email);
         if (source == null) return null;
         final String query = updateQuery("SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM user u JOIN follow f ON u.id = f.followee_id WHERE follower_id = ?", limit, since, order);
         final List<User> following = template.query(query, userMapper, source.id);
+        Logger.getLogger("q342353").warning(Utility.o2j(following));
         return following.stream().map(this::details).collect(Collectors.toList());
     }
 
-    /**
-     * (3 * n) queries
-     *
-     * @param email
-     * @param limit
-     * @param since
-     * @param order
-     * @return listFollowers
-     */
     public List<ExtendedUser> listFollowers(String email, int limit, int since, String order) {
         final User source = fromEmail(email);
         if (source == null) return null;

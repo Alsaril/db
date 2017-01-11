@@ -37,7 +37,7 @@ public class UserController {
         if (user == null) {
             return SimpleResponse.USER_EXISTS.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, user).response();
+        return CommonResponse.OK(user);
     }
 
     @RequestMapping(path = "db/api/user/updateProfile", method = RequestMethod.POST)
@@ -53,7 +53,7 @@ public class UserController {
         if (user == null) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, user).response();
+        return CommonResponse.OK(user);
     }
 
     @RequestMapping(path = "db/api/user/details", method = RequestMethod.GET)
@@ -65,7 +65,7 @@ public class UserController {
         if (user == null) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, user).response();
+        return CommonResponse.OK(user);
     }
 
 
@@ -107,7 +107,7 @@ public class UserController {
         if (user == null) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, user).response();
+        return CommonResponse.OK(user);
     }
 
     private ResponseEntity commonFollowList(boolean type, String email, String strLimit, String order, String strSince) {
@@ -144,6 +144,6 @@ public class UserController {
         if (users == null) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, users).response();
+        return CommonResponse.OK(users);
     }
 }

@@ -44,7 +44,7 @@ public class ThreadController {
             return SimpleResponse.NOT_FOUND.response;
         }
         final Thread<String, String> thread = threadDAO.create(forum, user, tcr.title, tcr.date, tcr.message, tcr.slug, tcr.isClosed, tcr.isDeleted);
-        return new CommonResponse<>(SimpleResponse.OK, thread).response();
+        return CommonResponse.OK(thread);
     }
 
     @RequestMapping(path = "db/api/thread/details", method = RequestMethod.GET)
@@ -62,7 +62,7 @@ public class ThreadController {
         if (thread == null) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, thread).response();
+        return CommonResponse.OK(thread);
     }
 
     @RequestMapping(path = "db/api/thread/update", method = RequestMethod.POST)
@@ -78,7 +78,7 @@ public class ThreadController {
         if (thread == null) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, thread).response();
+        return CommonResponse.OK(thread);
     }
 
     @RequestMapping(path = "db/api/thread/close", method = RequestMethod.POST)
@@ -90,7 +90,7 @@ public class ThreadController {
         if (!threadDAO.close(tsr.thread)) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, tsr).response();
+        return CommonResponse.OK(tsr);
     }
 
     @RequestMapping(path = "db/api/thread/open", method = RequestMethod.POST)
@@ -102,7 +102,7 @@ public class ThreadController {
         if (!threadDAO.open(tsr.thread)) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, tsr).response();
+        return CommonResponse.OK(tsr);
     }
 
     @RequestMapping(path = "db/api/thread/remove", method = RequestMethod.POST)
@@ -114,7 +114,7 @@ public class ThreadController {
         if (!threadDAO.remove(tsr.thread)) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, tsr).response();
+        return CommonResponse.OK(tsr);
     }
 
     @RequestMapping(path = "db/api/thread/restore", method = RequestMethod.POST)
@@ -126,7 +126,7 @@ public class ThreadController {
         if (!threadDAO.restore(tsr.thread)) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, tsr).response();
+        return CommonResponse.OK(tsr);
     }
 
     @RequestMapping(path = "db/api/thread/subscribe", method = RequestMethod.POST)
@@ -141,7 +141,7 @@ public class ThreadController {
         if (!threadDAO.subscibe(tsr.user, tsr.thread)) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, tsr).response();
+        return CommonResponse.OK(tsr);
     }
 
     @RequestMapping(path = "db/api/thread/unsubscribe", method = RequestMethod.POST)
@@ -156,7 +156,7 @@ public class ThreadController {
         if (!threadDAO.unsubscibe(tsr.user, tsr.thread)) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, tsr).response();
+        return CommonResponse.OK(tsr);
     }
 
     @RequestMapping(path = "db/api/thread/vote", method = RequestMethod.POST)
@@ -172,6 +172,43 @@ public class ThreadController {
         if (thread == null) {
             return SimpleResponse.NOT_FOUND.response;
         }
-        return new CommonResponse<>(SimpleResponse.OK, thread).response();
+        return CommonResponse.OK(thread);
+    }
+
+    @RequestMapping(path = "db/api/thread/list", method = RequestMethod.GET)
+    public ResponseEntity following(@RequestParam(name = "user", required = false) String email,
+                                    @RequestParam(name = "forum", required = false) String forum,
+                                    @RequestParam(name = "limit", required = false) String strLimit,
+                                    @RequestParam(name = "order", required = false) String order,
+                                    @RequestParam(name = "since", required = false) String since) {
+        if (StringUtils.isEmpty(email) && StringUtils.isEmpty(forum)) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        int limit = -1;
+        if (!StringUtils.isEmpty(strLimit)) {
+            try {
+                limit = Integer.parseInt(strLimit);
+            } catch (NumberFormatException e) {
+                return SimpleResponse.BAD_REQUEST.response;
+            }
+        }
+
+        if (StringUtils.isEmpty(order)) {
+            order = "desc";
+        }
+        if (!order.equals("desc") && !order.equals("asc")) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        if (StringUtils.isEmpty(since)) {
+            since = null;
+        }
+
+        final List<Thread<?, ?>> threads = threadDAO.listThreads(email, forum, limit, since, order);
+        if (threads == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(threads);
     }
 }

@@ -3,10 +3,12 @@ package ru.mail.park.DAO;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import ru.mail.park.Utility;
 import ru.mail.park.model.Forum;
 import ru.mail.park.model.Thread;
@@ -14,6 +16,7 @@ import ru.mail.park.model.User;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.List;
 
 @Service
 @Transactional
@@ -47,27 +50,31 @@ public class ThreadDAO {
         return new Thread<>(keyHolder.getKey().intValue(), forum.name, title, isClosed, user.email, date, message, slug, isDeleted, 0, 0, 0, 0);
     }
 
+    private RowMapper<Thread<?, ?>> threadMapper(boolean includeUser, boolean includeForum) {
+        return (rs, i) -> {
+            final int id = rs.getInt("id");
+            final String title = rs.getString("title");
+            final String message = rs.getString("message");
+            final String date = rs.getTimestamp("date").toLocalDateTime().format(Utility.FORMATTER);
+            final String slug = rs.getString("slug");
+            final int userId = rs.getInt("user_id");
+            final int forumId = rs.getInt("forum_id");
+            final boolean isClosed = rs.getBoolean("isClosed");
+            final boolean isDeleted = rs.getBoolean("isDeleted");
+            final int likes = rs.getInt("likes");
+            final int dislikes = rs.getInt("dislikes");
+            final int points = rs.getInt("points");
+            final int posts = rs.getInt("posts");
+            final User user = userDAO.get(userId);
+            final Forum forum = forumDAO.get(forumId, false);
+            return new Thread<>(id, includeForum ? forum : forum.short_name, title, isClosed, includeUser ? user : user.email, date, message, slug, isDeleted, likes, dislikes, points, posts);
+        };
+    }
+
     public Thread<?, ?> get(int id, boolean includeUser, boolean includeForum) {
         try {
             return template.queryForObject(
-                    "SELECT * FROM thread WHERE id = ?",
-                    (rs, i) -> {
-                        final String title = rs.getString("title");
-                        final String message = rs.getString("message");
-                        final String date = rs.getTimestamp("date").toLocalDateTime().format(Utility.FORMATTER);
-                        final String slug = rs.getString("slug");
-                        final int userId = rs.getInt("user_id");
-                        final int forumId = rs.getInt("forum_id");
-                        final boolean isClosed = rs.getBoolean("isClosed");
-                        final boolean isDeleted = rs.getBoolean("isDeleted");
-                        final int likes = rs.getInt("likes");
-                        final int dislikes = rs.getInt("dislikes");
-                        final int points = rs.getInt("points");
-                        final int posts = rs.getInt("posts");
-                        final User user = userDAO.get(userId);
-                        final Forum forum = forumDAO.get(forumId, false);
-                        return new Thread<>(id, includeForum ? forum : forum.short_name, title, isClosed, includeUser ? user : user.email, date, message, slug, isDeleted, likes, dislikes, points, posts);
-                    }, id);
+                    "SELECT * FROM thread WHERE id = ?", threadMapper(includeUser, includeForum), id);
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
@@ -132,5 +139,26 @@ public class ThreadDAO {
             return null;
         }
         return get(id, false, false);
+    }
+
+    public List<Thread<?, ?>> listThreads(String email, String forum, int limit, String since, String order) {
+        final String source = "SELECT t.id AS id, t.title AS title, t.message AS message, " +
+                "t.date AS date, t.slug AS slug, t.user_id AS user_id, t.forum_id AS forum_id, " +
+                "t.isClosed AS isClosed, t.isDeleted AS isDeleted, t.posts AS posts, " +
+                "t.likes as likes, t.dislikes as dislikes, t.points AS points FROM thread t JOIN ";
+        final StringBuilder query = new StringBuilder(source);
+        if (StringUtils.isEmpty(email)) {
+            query.append(" forum f ON f.id = t.forum_id WHERE f.shortname = ?");
+        } else {
+            query.append(" user u ON u.id = t.user_id WHERE u.email = ?");
+        }
+        if (since != null) {
+            query.append(" AND t.date >= '").append(since).append('\'');
+        }
+        query.append(" ORDER BY date ").append(order);
+        if (limit != -1) {
+            query.append(" LIMIT ").append(limit);
+        }
+        return template.query(query.toString(), threadMapper(false, false), StringUtils.isEmpty(email) ? forum : email);
     }
 }

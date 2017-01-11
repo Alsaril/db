@@ -7,7 +7,7 @@ public class CommonResponse<T> {
     public final T response;
     public int code;
 
-    public CommonResponse(SimpleResponse code, T response) {
+    CommonResponse(SimpleResponse code, T response) {
         this.code = code.code;
         this.response = response;
     }

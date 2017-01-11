@@ -9,7 +9,7 @@ import java.util.HashMap;
 @Service
 @Transactional
 public class CommonDAO {
-    private static final String[] ALL_TABLES = {"forum", "thread", "post", "user", "follow", "thread_vote", "post_vote"};
+    private static final String[] ALL_TABLES = {"forum", "thread", "post", "user", "follow", "thread_vote", "post_vote", "subscription"};
     private static final String[] DATA_TABLES = {"forum", "thread", "post", "user"};
     private final JdbcTemplate template;
 
