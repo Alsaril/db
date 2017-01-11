@@ -44,7 +44,7 @@ public class ThreadDAO {
             pst.setBoolean(8, isDeleted);
             return pst;
         }, keyHolder);
-        return new Thread<>(keyHolder.getKey().intValue(), forum.name, title, isClosed, user.email, date, message, slug, isDeleted);
+        return new Thread<>(keyHolder.getKey().intValue(), forum.name, title, isClosed, user.email, date, message, slug, isDeleted, 0, 0, 0, 0);
     }
 
     public Thread<?, ?> get(int id, boolean includeUser, boolean includeForum) {
@@ -60,16 +60,13 @@ public class ThreadDAO {
                         final int forumId = rs.getInt("forum_id");
                         final boolean isClosed = rs.getBoolean("isClosed");
                         final boolean isDeleted = rs.getBoolean("isDeleted");
-                        /*final int posts = rs.getInt("posts");
                         final int likes = rs.getInt("likes");
-                        final int dislikes = rs.getInt("dislikes");*/
+                        final int dislikes = rs.getInt("dislikes");
+                        final int points = rs.getInt("points");
+                        final int posts = rs.getInt("posts");
                         final User user = userDAO.get(userId);
                         final Forum forum = forumDAO.get(forumId, false);
-                        return new Thread<>(id, includeForum ? forum : forum.short_name, title, isClosed, includeUser ? user : user.email, date, message, slug, isDeleted);
-                        /*result.setPosts(posts);
-                        result.setLikes(likes);
-                        result.setDislikes(dislikes);
-                        result.setId(id);*/
+                        return new Thread<>(id, includeForum ? forum : forum.short_name, title, isClosed, includeUser ? user : user.email, date, message, slug, isDeleted, likes, dislikes, points, posts);
                     }, id);
         } catch (EmptyResultDataAccessException e) {
             return null;
@@ -122,5 +119,18 @@ public class ThreadDAO {
         final String query = "DELETE FROM subscription WHERE user_id = ? AND thread_id = ?";
         template.update(query, user.id, id);
         return true;
+    }
+
+    public Thread<?, ?> vote(int id, int vote) {
+        final String query;
+        if (vote == 1) {
+            query = "UPDATE thread SET likes = likes + 1, points = points + 1 WHERE id = ?";
+        } else {
+            query = "UPDATE thread SET dislikes = dislikes + 1, points = points - 1 WHERE id = ?";
+        }
+        if (template.update(query, id) == 0) {
+            return null;
+        }
+        return get(id, false, false);
     }
 }

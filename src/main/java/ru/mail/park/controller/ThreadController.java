@@ -10,10 +10,7 @@ import ru.mail.park.Utility;
 import ru.mail.park.model.Forum;
 import ru.mail.park.model.Thread;
 import ru.mail.park.model.User;
-import ru.mail.park.request.ThreadCreateRequest;
-import ru.mail.park.request.ThreadStatusRequest;
-import ru.mail.park.request.ThreadSubscribeRequest;
-import ru.mail.park.request.ThreadUpdateRequest;
+import ru.mail.park.request.*;
 import ru.mail.park.response.CommonResponse;
 import ru.mail.park.response.SimpleResponse;
 
@@ -160,5 +157,21 @@ public class ThreadController {
             return SimpleResponse.NOT_FOUND.response;
         }
         return new CommonResponse<>(SimpleResponse.OK, tsr).response();
+    }
+
+    @RequestMapping(path = "db/api/thread/vote", method = RequestMethod.POST)
+    public ResponseEntity vote(@RequestBody String body) {
+        final ThreadVoteRequest tvr = Utility.j2o(body, ThreadVoteRequest.class);
+        if (tvr == null) {
+            return SimpleResponse.INVALID_REQUEST.response;
+        }
+        if (!tvr.isValid()) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+        final Thread<?, ?> thread = threadDAO.vote(tvr.thread, tvr.vote);
+        if (thread == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return new CommonResponse<>(SimpleResponse.OK, thread).response();
     }
 }

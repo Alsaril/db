@@ -30,6 +30,10 @@ CREATE TABLE IF NOT EXISTS thread (
   date      DATETIME     NOT NULL,
   message   TEXT         NOT NULL,
   slug      TEXT         NOT NULL,
+  likes     INT          NOT NULL DEFAULT 0,
+  dislikes  INT          NOT NULL DEFAULT 0,
+  points    INT          NOT NULL DEFAULT 0,
+  posts     INT          NOT NULL DEFAULT 0,
   FOREIGN KEY (forum_id) REFERENCES forum (id),
   FOREIGN KEY (user_id) REFERENCES user (id)
 )
