@@ -72,10 +72,27 @@ public class UserDAO {
         return user;
     }
 
+    public User get(int id) {
+        final User user;
+        try {
+            final String userQuery = "SELECT * FROM user WHERE id = ?";
+            user = template.queryForObject(userQuery, userMapper, id);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+        return user;
+    }
+
     public ExtendedUser details(String email) {
         return details(fromEmail(email));
     }
 
+    /**
+     * 3 queries
+     *
+     * @param user
+     * @return user details
+     */
     public ExtendedUser details(User user) {
         if (user == null) return null;
         final String followersQuery = "SELECT u.email FROM user u JOIN follow f ON u.id = f.follower_id WHERE followee_id = ?";
@@ -99,6 +116,15 @@ public class UserDAO {
         return query.toString();
     }
 
+    /**
+     * (3 * n) queries
+     *
+     * @param email
+     * @param limit
+     * @param since
+     * @param order
+     * @return listFollowing
+     */
     public List<ExtendedUser> listFollowing(String email, int limit, int since, String order) {
         final User source = fromEmail(email);
         if (source == null) return null;
@@ -107,6 +133,15 @@ public class UserDAO {
         return following.stream().map(this::details).collect(Collectors.toList());
     }
 
+    /**
+     * (3 * n) queries
+     *
+     * @param email
+     * @param limit
+     * @param since
+     * @param order
+     * @return listFollowers
+     */
     public List<ExtendedUser> listFollowers(String email, int limit, int since, String order) {
         final User source = fromEmail(email);
         if (source == null) return null;

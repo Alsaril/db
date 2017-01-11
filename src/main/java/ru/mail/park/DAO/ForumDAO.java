@@ -4,6 +4,7 @@ package ru.mail.park.DAO;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
@@ -43,21 +44,35 @@ public class ForumDAO {
         return new Forum<>(keyHolder.getKey().intValue(), name, shortName, user.email);
     }
 
+    private RowMapper<Forum<?>> forumMapper(boolean includeUser) {
+        return (rs, i) -> {
+            final int id = rs.getInt("id");
+            final String name = rs.getString("name");
+            final String email = rs.getString("email");
+            final String shortName = rs.getString("shortname");
+            if (!includeUser) {
+                return new Forum<>(id, name, shortName, email);
+            } else {
+                return new Forum<>(id, name, shortName, userDAO.details(email));
+            }
+        };
+    }
 
     public Forum<?> fromShortName(String shortName, boolean includeUser) {
         try {
             return template.queryForObject(
-                    "SELECT f.id AS id, f.name AS name, u.email AS email FROM forum f JOIN user u ON u.id = f.user_id WHERE f.shortname = ?",
-                    (rs, i) -> {
-                        final int id = rs.getInt("id");
-                        final String name = rs.getString("name");
-                        final String email = rs.getString("email");
-                        if (!includeUser) {
-                            return new Forum<>(id, name, shortName, email);
-                        } else {
-                            return new Forum<>(id, name, shortName, userDAO.details(email));
-                        }
-                    }, shortName);
+                    "SELECT f.id AS id, f.name AS name, u.email AS email, f.shortname AS shortname FROM forum f JOIN user u ON u.id = f.user_id WHERE f.shortname = ?",
+                    forumMapper(includeUser), shortName);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
+    public Forum<?> get(int id, boolean includeUser) {
+        try {
+            return template.queryForObject(
+                    "SELECT f.id AS id, f.name AS name, u.email AS email, f.shortname AS shortname FROM forum f JOIN user u ON u.id = f.user_id WHERE f.id = ?",
+                    forumMapper(includeUser), id);
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
