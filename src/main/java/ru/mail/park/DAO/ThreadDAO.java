@@ -30,7 +30,7 @@ public class ThreadDAO {
     public Thread<String, String> create(Forum forum, User user, String title, String date, String message, String slug, boolean isClosed, boolean isDeleted) {
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         template.update(connection -> {
-            final String query = "INSERT INTO thread (forum_id, user_id, title, date, message, slug, isClosed, isDeleted) VALUES (?,?,?,?,?,?,?,?);";
+            final String query = "INSERT INTO thread (forum_id, user_id, title, date, message, slug, isClosed, isDeleted) VALUES (?,?,?,?,?,?,?,?)";
             final PreparedStatement pst = connection.prepareStatement(query,
                     Statement.RETURN_GENERATED_KEYS);
             pst.setInt(1, forum.id);
@@ -74,4 +74,33 @@ public class ThreadDAO {
             return null;
         }
     }
+
+    public Thread<?, ?> update(int id, String message, String slug) {
+        final String query = "UPDATE thread SET message = ?, slug = ? WHERE id = ?";
+        if (template.update(query, message, slug, id) == 0) {
+            return null;
+        }
+        return get(id, false, false);
+    }
+
+    public boolean close(int id) {
+        final String query = "UPDATE thread SET isClosed = 1 WHERE id = ?";
+        return template.update(query, id) != 0;
+    }
+
+    public boolean open(int id) {
+        final String query = "UPDATE thread SET isClosed = 0 WHERE id = ?";
+        return template.update(query, id) != 0;
+    }
+
+    public boolean remove(int id) {
+        final String query = "UPDATE thread SET isDeleted = 1 WHERE id = ?";
+        return template.update(query, id) != 0; // remove posts
+    }
+
+    public boolean restore(int id) {
+        final String query = "UPDATE thread SET isDeleted = 0 WHERE id = ?";
+        return template.update(query, id) != 0; //restore posts
+    }
+
 }
