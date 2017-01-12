@@ -13,6 +13,7 @@ import ru.mail.park.model.Post;
 import ru.mail.park.model.Thread;
 import ru.mail.park.model.User;
 import ru.mail.park.request.PostCreateRequest;
+import ru.mail.park.request.PostUpdateRequest;
 import ru.mail.park.response.CommonResponse;
 import ru.mail.park.response.SimpleResponse;
 
@@ -76,6 +77,22 @@ public class PostController {
             return SimpleResponse.BAD_REQUEST.response;
         }
         final Post<?, ?, ?> post = postDAO.get(postId, Utility.contains(related, "user"), Utility.contains(related, "thread"), Utility.contains(related, "forum"));
+        if (post == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(post);
+    }
+
+    @RequestMapping(path = "db/api/post/update", method = RequestMethod.POST)
+    public ResponseEntity update(@RequestBody String body) {
+        final PostUpdateRequest pur = Utility.j2o(body, PostUpdateRequest.class);
+        if (pur == null) {
+            return SimpleResponse.INVALID_REQUEST.response;
+        }
+        if (!pur.isValid()) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+        final Post<?, ?, ?> post = postDAO.update(pur.post, pur.message);
         if (post == null) {
             return SimpleResponse.NOT_FOUND.response;
         }

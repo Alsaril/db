@@ -176,11 +176,11 @@ public class ThreadController {
     }
 
     @RequestMapping(path = "db/api/thread/list", method = RequestMethod.GET)
-    public ResponseEntity following(@RequestParam(name = "user", required = false) String email,
-                                    @RequestParam(name = "forum", required = false) String forum,
-                                    @RequestParam(name = "limit", required = false) String strLimit,
-                                    @RequestParam(name = "order", required = false) String order,
-                                    @RequestParam(name = "since", required = false) String since) {
+    public ResponseEntity list(@RequestParam(name = "user", required = false) String email,
+                               @RequestParam(name = "forum", required = false) String forum,
+                               @RequestParam(name = "limit", required = false) String strLimit,
+                               @RequestParam(name = "order", required = false) String order,
+                               @RequestParam(name = "since", required = false) String since) {
         if (StringUtils.isEmpty(email) && StringUtils.isEmpty(forum)) {
             return SimpleResponse.BAD_REQUEST.response;
         }

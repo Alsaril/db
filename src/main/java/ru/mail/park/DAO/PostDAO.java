@@ -17,6 +17,7 @@ import ru.mail.park.model.User;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.List;
 
 @Service
 @Transactional
@@ -97,5 +98,26 @@ public class PostDAO {
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
+    }
+
+    public Post<?, ?, ?> update(int id, String message) {
+        final String query = "UPDATE post SET message = ? WHERE id = ?";
+        if (template.update(query, message, id) == 0) {
+            return null;
+        }
+        return get(id, false, false, false);
+    }
+
+    public List<Post<?, ?, ?>> listPosts(String email, int limit, String since, String order) {
+        final String source = "SELECT * FROM post p JOIN user u ON p.user_id = u.id WHERE u.email = ?";
+        final StringBuilder query = new StringBuilder(source);
+        if (since != null) {
+            query.append(" AND p.date >= '").append(since).append('\'');
+        }
+        query.append(" ORDER BY date ").append(order);
+        if (limit != -1) {
+            query.append(" LIMIT ").append(limit);
+        }
+        return template.query(query.toString(), postMapper(false, false, false), email);
     }
 }

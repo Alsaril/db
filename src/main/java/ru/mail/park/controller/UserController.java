@@ -3,9 +3,11 @@ package ru.mail.park.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import ru.mail.park.DAO.PostDAO;
 import ru.mail.park.DAO.UserDAO;
 import ru.mail.park.Utility;
 import ru.mail.park.model.ExtendedUser;
+import ru.mail.park.model.Post;
 import ru.mail.park.model.User;
 import ru.mail.park.request.FollowRequest;
 import ru.mail.park.request.UserCreateRequest;
@@ -19,9 +21,11 @@ import java.util.List;
 public class UserController {
 
     private final UserDAO userDAO;
+    private final PostDAO postDAO;
 
-    public UserController(UserDAO userDAO) {
+    public UserController(UserDAO userDAO, PostDAO postDAO) {
         this.userDAO = userDAO;
+        this.postDAO = postDAO;
     }
 
     @RequestMapping(path = "db/api/user/create", method = RequestMethod.POST)
@@ -93,6 +97,42 @@ public class UserController {
                                     @RequestParam(name = "order", required = false) String order,
                                     @RequestParam(name = "since_id", required = false) String since) {
         return commonFollowList(false, email, limit, order, since);
+    }
+
+    @RequestMapping(path = "db/api/user/listPosts", method = RequestMethod.GET)
+    public ResponseEntity lisPosts(@RequestParam(name = "user") String email,
+                                   @RequestParam(name = "limit", required = false) String strLimit,
+                                   @RequestParam(name = "order", required = false) String order,
+                                   @RequestParam(name = "since", required = false) String since) {
+        if (StringUtils.isEmpty(email)) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        int limit = -1;
+        if (!StringUtils.isEmpty(strLimit)) {
+            try {
+                limit = Integer.parseInt(strLimit);
+            } catch (NumberFormatException e) {
+                return SimpleResponse.BAD_REQUEST.response;
+            }
+        }
+
+        if (StringUtils.isEmpty(order)) {
+            order = "desc";
+        }
+        if (!order.equals("desc") && !order.equals("asc")) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        if (StringUtils.isEmpty(since)) {
+            since = null;
+        }
+
+        final List<Post<?, ?, ?>> posts = postDAO.listPosts(email, limit, since, order);
+        if (posts == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(posts);
     }
 
     private ResponseEntity commonFollow(boolean type, String body) {
