@@ -133,4 +133,17 @@ public class PostDAO {
         }
         return template.query(query.toString(), postMapper(includeUser, includeThread, includeForum), forum);
     }
+
+    public Post<?, ?, ?> vote(int id, int vote) {
+        final String query;
+        if (vote == 1) {
+            query = "UPDATE post SET likes = likes + 1, points = points + 1 WHERE id = ?";
+        } else {
+            query = "UPDATE post SET dislikes = dislikes + 1, points = points - 1 WHERE id = ?";
+        }
+        if (template.update(query, id) == 0) {
+            return null;
+        }
+        return get(id, false, false, false);
+    }
 }

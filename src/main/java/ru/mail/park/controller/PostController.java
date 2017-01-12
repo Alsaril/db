@@ -14,6 +14,7 @@ import ru.mail.park.model.Thread;
 import ru.mail.park.model.User;
 import ru.mail.park.request.PostCreateRequest;
 import ru.mail.park.request.PostUpdateRequest;
+import ru.mail.park.request.PostVoteRequest;
 import ru.mail.park.response.CommonResponse;
 import ru.mail.park.response.SimpleResponse;
 
@@ -93,6 +94,22 @@ public class PostController {
             return SimpleResponse.BAD_REQUEST.response;
         }
         final Post<?, ?, ?> post = postDAO.update(pur.post, pur.message);
+        if (post == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(post);
+    }
+
+    @RequestMapping(path = "db/api/post/vote", method = RequestMethod.POST)
+    public ResponseEntity vote(@RequestBody String body) {
+        final PostVoteRequest pvr = Utility.j2o(body, PostVoteRequest.class);
+        if (pvr == null) {
+            return SimpleResponse.INVALID_REQUEST.response;
+        }
+        if (!pvr.isValid()) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+        final Post<?, ?, ?> post = postDAO.vote(pvr.post, pvr.vote);
         if (post == null) {
             return SimpleResponse.NOT_FOUND.response;
         }
