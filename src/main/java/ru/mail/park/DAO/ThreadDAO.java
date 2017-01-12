@@ -142,10 +142,7 @@ public class ThreadDAO {
     }
 
     public List<Thread<?, ?>> listThreads(String email, String forum, int limit, String since, String order) {
-        final String source = "SELECT t.id AS id, t.title AS title, t.message AS message, " +
-                "t.date AS date, t.slug AS slug, t.user_id AS user_id, t.forum_id AS forum_id, " +
-                "t.isClosed AS isClosed, t.isDeleted AS isDeleted, t.posts AS posts, " +
-                "t.likes as likes, t.dislikes as dislikes, t.points AS points FROM thread t JOIN ";
+        final String source = "SELECT * FROM thread t JOIN ";
         final StringBuilder query = new StringBuilder(source);
         if (StringUtils.isEmpty(email)) {
             query.append(" forum f ON f.id = t.forum_id WHERE f.shortname = ?");

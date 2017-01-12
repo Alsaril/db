@@ -18,6 +18,7 @@ import ru.mail.park.response.SimpleResponse;
 import java.util.List;
 
 @RestController
+@RequestMapping(produces = "application/json; charset=utf-8")
 public class UserController {
 
     private final UserDAO userDAO;
@@ -100,10 +101,10 @@ public class UserController {
     }
 
     @RequestMapping(path = "db/api/user/listPosts", method = RequestMethod.GET)
-    public ResponseEntity lisPosts(@RequestParam(name = "user") String email,
-                                   @RequestParam(name = "limit", required = false) String strLimit,
-                                   @RequestParam(name = "order", required = false) String order,
-                                   @RequestParam(name = "since", required = false) String since) {
+    public ResponseEntity listPosts(@RequestParam(name = "user") String email,
+                                    @RequestParam(name = "limit", required = false) String strLimit,
+                                    @RequestParam(name = "order", required = false) String order,
+                                    @RequestParam(name = "since", required = false) String since) {
         if (StringUtils.isEmpty(email)) {
             return SimpleResponse.BAD_REQUEST.response;
         }
@@ -128,7 +129,7 @@ public class UserController {
             since = null;
         }
 
-        final List<Post<?, ?, ?>> posts = postDAO.listPosts(email, limit, since, order);
+        final List<Post<?, ?, ?>> posts = postDAO.userListPosts(email, limit, since, order);
         if (posts == null) {
             return SimpleResponse.NOT_FOUND.response;
         }

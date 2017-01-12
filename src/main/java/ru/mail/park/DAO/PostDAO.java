@@ -108,7 +108,7 @@ public class PostDAO {
         return get(id, false, false, false);
     }
 
-    public List<Post<?, ?, ?>> listPosts(String email, int limit, String since, String order) {
+    public List<Post<?, ?, ?>> userListPosts(String email, int limit, String since, String order) {
         final String source = "SELECT * FROM post p JOIN user u ON p.user_id = u.id WHERE u.email = ?";
         final StringBuilder query = new StringBuilder(source);
         if (since != null) {
@@ -119,5 +119,18 @@ public class PostDAO {
             query.append(" LIMIT ").append(limit);
         }
         return template.query(query.toString(), postMapper(false, false, false), email);
+    }
+
+    public List<Post<?, ?, ?>> forumListPosts(String forum, int limit, String since, String order, boolean includeUser, boolean includeThread, boolean includeForum) {
+        final String source = "SELECT * FROM post p JOIN forum f ON p.forum_id = f.id WHERE f.shortname = ?";
+        final StringBuilder query = new StringBuilder(source);
+        if (since != null) {
+            query.append(" AND p.date >= '").append(since).append('\'');
+        }
+        query.append(" ORDER BY date ").append(order);
+        if (limit != -1) {
+            query.append(" LIMIT ").append(limit);
+        }
+        return template.query(query.toString(), postMapper(includeUser, includeThread, includeForum), forum);
     }
 }

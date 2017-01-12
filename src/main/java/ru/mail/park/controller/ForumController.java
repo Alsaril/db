@@ -5,9 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import ru.mail.park.DAO.ForumDAO;
+import ru.mail.park.DAO.PostDAO;
 import ru.mail.park.DAO.UserDAO;
 import ru.mail.park.Utility;
 import ru.mail.park.model.Forum;
+import ru.mail.park.model.Post;
 import ru.mail.park.model.User;
 import ru.mail.park.request.ForumCreateRequest;
 import ru.mail.park.response.CommonResponse;
@@ -17,14 +19,17 @@ import java.util.List;
 
 
 @RestController
+@RequestMapping(produces = "application/json; charset=utf-8")
 public class ForumController {
 
     private final ForumDAO forumDAO;
     private final UserDAO userDAO;
+    private final PostDAO postDAO;
 
-    public ForumController(ForumDAO forumDAO, UserDAO userDAO) {
+    public ForumController(ForumDAO forumDAO, UserDAO userDAO, PostDAO postDAO) {
         this.forumDAO = forumDAO;
         this.userDAO = userDAO;
+        this.postDAO = postDAO;
     }
 
     @RequestMapping(path = "db/api/forum/create", method = RequestMethod.POST)
@@ -55,5 +60,42 @@ public class ForumController {
             return SimpleResponse.NOT_FOUND.response;
         }
         return CommonResponse.OK(forum);
+    }
+
+    @RequestMapping(path = "db/api/forum/listPosts", method = RequestMethod.GET)
+    public ResponseEntity listPosts(@RequestParam(name = "forum") String forum,
+                                    @RequestParam(name = "limit", required = false) String strLimit,
+                                    @RequestParam(name = "order", required = false) String order,
+                                    @RequestParam(name = "since", required = false) String since,
+                                    @RequestParam(name = "related", required = false) List<String> related) {
+        if (StringUtils.isEmpty(forum)) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        int limit = -1;
+        if (!StringUtils.isEmpty(strLimit)) {
+            try {
+                limit = Integer.parseInt(strLimit);
+            } catch (NumberFormatException e) {
+                return SimpleResponse.BAD_REQUEST.response;
+            }
+        }
+
+        if (StringUtils.isEmpty(order)) {
+            order = "desc";
+        }
+        if (!order.equals("desc") && !order.equals("asc")) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        if (StringUtils.isEmpty(since)) {
+            since = null;
+        }
+
+        final List<Post<?, ?, ?>> posts = postDAO.forumListPosts(forum, limit, since, order, Utility.contains(related, "user"), Utility.contains(related, "thread"), Utility.contains(related, "forum"));
+        if (posts == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(posts);
     }
 }
