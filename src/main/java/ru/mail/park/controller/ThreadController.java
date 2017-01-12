@@ -19,9 +19,9 @@ import java.util.List;
 @RestController
 @RequestMapping(produces = "application/json; charset=utf-8")
 public class ThreadController {
-    private ThreadDAO threadDAO;
-    private ForumDAO forumDAO;
-    private UserDAO userDAO;
+    private final ThreadDAO threadDAO;
+    private final ForumDAO forumDAO;
+    private final UserDAO userDAO;
 
     public ThreadController(ThreadDAO threadDAO, ForumDAO forumDAO, UserDAO userDAO) {
         this.threadDAO = threadDAO;

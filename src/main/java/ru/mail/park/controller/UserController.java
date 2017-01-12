@@ -18,7 +18,7 @@ import java.util.List;
 @RestController
 public class UserController {
 
-    private UserDAO userDAO;
+    private final UserDAO userDAO;
 
     public UserController(UserDAO userDAO) {
         this.userDAO = userDAO;

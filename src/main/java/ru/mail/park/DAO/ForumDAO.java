@@ -19,7 +19,7 @@ import java.sql.Statement;
 @Transactional
 public class ForumDAO {
     private final JdbcTemplate template;
-    private UserDAO userDAO;
+    private final UserDAO userDAO;
 
     public ForumDAO(JdbcTemplate template, UserDAO userDAO) {
         this.template = template;

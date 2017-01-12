@@ -8,14 +8,12 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.mail.park.Utility;
 import ru.mail.park.model.ExtendedUser;
 import ru.mail.park.model.User;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
@@ -89,12 +87,6 @@ public class UserDAO {
         return details(fromEmail(email));
     }
 
-    /**
-     * 3 queries
-     *
-     * @param user
-     * @return user details
-     */
     public ExtendedUser details(User user) {
         if (user == null) return null;
         final String followersQuery = "SELECT u.email FROM user u JOIN follow f ON u.id = f.follower_id WHERE followee_id = ?";
@@ -123,7 +115,6 @@ public class UserDAO {
         if (source == null) return null;
         final String query = updateQuery("SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM user u JOIN follow f ON u.id = f.followee_id WHERE follower_id = ?", limit, since, order);
         final List<User> following = template.query(query, userMapper, source.id);
-        Logger.getLogger("q342353").warning(Utility.o2j(following));
         return following.stream().map(this::details).collect(Collectors.toList());
     }
 

@@ -22,8 +22,8 @@ import java.util.List;
 @Transactional
 public class ThreadDAO {
     private final JdbcTemplate template;
-    private UserDAO userDAO;
-    private ForumDAO forumDAO;
+    private final UserDAO userDAO;
+    private final ForumDAO forumDAO;
 
     public ThreadDAO(JdbcTemplate template, UserDAO userDAO, ForumDAO forumDAO) {
         this.template = template;
@@ -66,7 +66,7 @@ public class ThreadDAO {
             final int points = rs.getInt("points");
             final int posts = rs.getInt("posts");
             final User user = userDAO.get(userId);
-            final Forum forum = forumDAO.get(forumId, false);
+            final Forum<?> forum = forumDAO.get(forumId, includeUser);
             return new Thread<>(id, includeForum ? forum : forum.short_name, title, isClosed, includeUser ? user : user.email, date, message, slug, isDeleted, likes, dislikes, points, posts);
         };
     }
@@ -160,5 +160,10 @@ public class ThreadDAO {
             query.append(" LIMIT ").append(limit);
         }
         return template.query(query.toString(), threadMapper(false, false), StringUtils.isEmpty(email) ? forum : email);
+    }
+
+    public void addPost(int id) {
+        final String query = "UPDATE thread SET posts = posts + 1 WHERE id = ?";
+        template.update(query, id);
     }
 }

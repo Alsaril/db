@@ -19,8 +19,8 @@ import java.util.List;
 @RestController
 public class ForumController {
 
-    private ForumDAO forumDAO;
-    private UserDAO userDAO;
+    private final ForumDAO forumDAO;
+    private final UserDAO userDAO;
 
     public ForumController(ForumDAO forumDAO, UserDAO userDAO) {
         this.forumDAO = forumDAO;

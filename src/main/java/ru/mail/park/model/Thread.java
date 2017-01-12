@@ -10,10 +10,10 @@ public class Thread<U, F> {
     public final String message;
     public final String slug;
     public final boolean isDeleted;
-    public final int likes;
-    public final int dislikes;
-    public final int points;
-    public final int posts;
+    public int likes;
+    public int dislikes;
+    public int points;
+    public int posts;
 
     public Thread(int id, F forum, String title, boolean isClosed, U user, String date, String message, String slug, boolean isDeleted, int likes, int dislikes, int points, int posts) {
         this.id = id;
@@ -29,5 +29,9 @@ public class Thread<U, F> {
         this.dislikes = dislikes;
         this.points = points;
         this.posts = posts;
+    }
+
+    public void addPost() {
+        posts++;
     }
 }
