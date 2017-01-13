@@ -62,10 +62,12 @@ public class PostDAO {
         } catch (DuplicateKeyException e) {
             return null;
         }
-        threadDAO.addPost(thread.id);
         thread.addPost();
 
         final int id = keyHolder.getKey().intValue();
+
+        final String query = "UPDATE thread SET posts = posts + 1 WHERE id = ?";
+        template.update(query, id);
 
         final Integer root;
         final String path;

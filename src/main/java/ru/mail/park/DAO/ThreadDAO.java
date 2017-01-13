@@ -162,11 +162,6 @@ public class ThreadDAO {
         return template.query(query.toString(), threadMapper(false, false), StringUtils.isEmpty(email) ? forum : email);
     }
 
-    public void addPost(int id) {
-        final String query = "UPDATE thread SET posts = posts + 1 WHERE id = ?";
-        template.update(query, id);
-    }
-
     public List<Thread<?, ?>> forumListThreads(String forum, int limit, String since, String order, boolean includeUser, boolean includeForum) {
         final String source = "SELECT * FROM thread t JOIN forum f ON f.id = t.forum_id WHERE f.shortname = ?";
         final StringBuilder query = new StringBuilder(source);
