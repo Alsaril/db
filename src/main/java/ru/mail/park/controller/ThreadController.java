@@ -205,7 +205,7 @@ public class ThreadController {
             since = null;
         }
 
-        final List<Thread<?, ?>> threads = threadDAO.listThreads(email, forum, limit, since, order);
+        final List<Thread<?, ?>> threads = threadDAO.list(email, forum, limit, since, order);
         if (threads == null) {
             return SimpleResponse.NOT_FOUND.response;
         }

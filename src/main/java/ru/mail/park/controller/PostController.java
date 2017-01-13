@@ -140,4 +140,41 @@ public class PostController {
         }
         return CommonResponse.OK(psr);
     }
+
+    @RequestMapping(path = "db/api/post/list", method = RequestMethod.GET)
+    public ResponseEntity list(@RequestParam(name = "thread", required = false) String thread,
+                               @RequestParam(name = "forum", required = false) String forum,
+                               @RequestParam(name = "limit", required = false) String strLimit,
+                               @RequestParam(name = "order", required = false) String order,
+                               @RequestParam(name = "since", required = false) String since) {
+        if (StringUtils.isEmpty(thread) && StringUtils.isEmpty(forum)) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        int limit = -1;
+        if (!StringUtils.isEmpty(strLimit)) {
+            try {
+                limit = Integer.parseInt(strLimit);
+            } catch (NumberFormatException e) {
+                return SimpleResponse.BAD_REQUEST.response;
+            }
+        }
+
+        if (StringUtils.isEmpty(order)) {
+            order = "desc";
+        }
+        if (!order.equals("desc") && !order.equals("asc")) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        if (StringUtils.isEmpty(since)) {
+            since = null;
+        }
+
+        final List<Post<?, ?, ?>> posts = postDAO.list(thread, forum, limit, since, order);
+        if (posts == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(posts);
+    }
 }

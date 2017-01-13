@@ -65,7 +65,7 @@ public class ThreadDAO {
             final int dislikes = rs.getInt("dislikes");
             final int points = rs.getInt("points");
             final int posts = rs.getInt("posts");
-            final User user = userDAO.get(userId);
+            final User user = userDAO.details(userId);
             final Forum<?> forum = forumDAO.get(forumId, includeUser);
             return new Thread<>(id, includeForum ? forum : forum.short_name, title, isClosed, includeUser ? user : user.email, date, message, slug, isDeleted, likes, dislikes, points, posts);
         };
@@ -144,7 +144,7 @@ public class ThreadDAO {
         return get(id, false, false);
     }
 
-    public List<Thread<?, ?>> listThreads(String email, String forum, int limit, String since, String order) {
+    public List<Thread<?, ?>> list(String email, String forum, int limit, String since, String order) {
         final String source = "SELECT * FROM thread t JOIN ";
         final StringBuilder query = new StringBuilder(source);
         if (StringUtils.isEmpty(email)) {
@@ -165,5 +165,19 @@ public class ThreadDAO {
     public void addPost(int id) {
         final String query = "UPDATE thread SET posts = posts + 1 WHERE id = ?";
         template.update(query, id);
+    }
+
+    public List<Thread<?, ?>> forumListThreads(String forum, int limit, String since, String order, boolean includeUser, boolean includeForum) {
+        final String source = "SELECT * FROM thread t JOIN forum f ON f.id = t.forum_id WHERE f.shortname = ?";
+        final StringBuilder query = new StringBuilder(source);
+        if (since != null) {
+            query.append(" AND t.date >= '").append(since).append('\'');
+        }
+        query.append(" ORDER BY date ").append(order);
+        if (limit != -1) {
+            query.append(" LIMIT ").append(limit);
+        }
+        return template.query(query.toString(), threadMapper(includeUser, includeForum), forum);
+
     }
 }

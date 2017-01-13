@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import ru.mail.park.Utility;
 import ru.mail.park.model.Forum;
 import ru.mail.park.model.Post;
@@ -84,7 +85,7 @@ public class PostDAO {
             final int dislikes = rs.getInt("dislikes");
             final int points = rs.getInt("points");
             final Thread<?, ?> thread = threadDAO.get(threadId, includeUser, includeForum);
-            final User user = userDAO.get(userId);
+            final User user = userDAO.details(userId);
             final Forum<?> forum = forumDAO.get(forumId, includeUser);
             final Post<?, ?, ?> parent = parentId == null ? null : get(parentId, false, false, false);
             return new Post<>(id, date, includeThread ? thread : thread.id, message, includeUser ? user : user.email, includeForum ? forum : forum.short_name, parent == null ? null : parent.id, isApproved, isHighlighted, isEdited, isSpam, isDeleted, likes, dislikes, points);
@@ -163,5 +164,24 @@ public class PostDAO {
             return true;
         }
         return false;
+    }
+
+
+    public List<Post<?, ?, ?>> list(String thread, String forum, int limit, String since, String order) {
+        final String source = "SELECT * FROM post";
+        final StringBuilder query = new StringBuilder(source);
+        if (StringUtils.isEmpty(thread)) {
+            query.append(" p JOIN  forum f ON f.id = p.forum_id WHERE f.shortname = ?");
+        } else {
+            query.append(" WHERE thread_id = ?");
+        }
+        if (since != null) {
+            query.append(" AND date >= '").append(since).append('\'');
+        }
+        query.append(" ORDER BY date ").append(order);
+        if (limit != -1) {
+            query.append(" LIMIT ").append(limit);
+        }
+        return template.query(query.toString(), postMapper(false, false, false), StringUtils.isEmpty(thread) ? forum : thread);
     }
 }

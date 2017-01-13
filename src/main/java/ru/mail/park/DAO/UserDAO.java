@@ -87,6 +87,10 @@ public class UserDAO {
         return details(fromEmail(email));
     }
 
+    public ExtendedUser details(int id) {
+        return details(get(id));
+    }
+
     public ExtendedUser details(User user) {
         if (user == null) return null;
         final String followersQuery = "SELECT u.email FROM user u JOIN follow f ON u.id = f.follower_id WHERE followee_id = ?";
@@ -149,4 +153,17 @@ public class UserDAO {
         return details(r);
     }
 
+    public List<User> forumListUsers(String forum, int limit, String since, String order) {
+        final String source = "SELECT DISTINCT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM user u JOIN post p on u.id = p.user_id JOIN forum f ON f.id = p.forum_id WHERE f.shortname = ?";
+        final StringBuilder query = new StringBuilder(source);
+        if (since != null) {
+            query.append(" AND u.id >= ").append(since);
+        }
+        query.append(" ORDER BY u.name ").append(order);
+        if (limit != -1) {
+            query.append(" LIMIT ").append(limit);
+        }
+        final List<User> users = template.query(query.toString(), userMapper, forum);
+        return users.stream().map(this::details).collect(Collectors.toList());
+    }
 }

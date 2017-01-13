@@ -6,10 +6,12 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import ru.mail.park.DAO.ForumDAO;
 import ru.mail.park.DAO.PostDAO;
+import ru.mail.park.DAO.ThreadDAO;
 import ru.mail.park.DAO.UserDAO;
 import ru.mail.park.Utility;
 import ru.mail.park.model.Forum;
 import ru.mail.park.model.Post;
+import ru.mail.park.model.Thread;
 import ru.mail.park.model.User;
 import ru.mail.park.request.ForumCreateRequest;
 import ru.mail.park.response.CommonResponse;
@@ -25,11 +27,13 @@ public class ForumController {
     private final ForumDAO forumDAO;
     private final UserDAO userDAO;
     private final PostDAO postDAO;
+    private final ThreadDAO threadDAO;
 
-    public ForumController(ForumDAO forumDAO, UserDAO userDAO, PostDAO postDAO) {
+    public ForumController(ForumDAO forumDAO, UserDAO userDAO, PostDAO postDAO, ThreadDAO threadDAO) {
         this.forumDAO = forumDAO;
         this.userDAO = userDAO;
         this.postDAO = postDAO;
+        this.threadDAO = threadDAO;
     }
 
     @RequestMapping(path = "db/api/forum/create", method = RequestMethod.POST)
@@ -97,5 +101,78 @@ public class ForumController {
             return SimpleResponse.NOT_FOUND.response;
         }
         return CommonResponse.OK(posts);
+    }
+
+    @RequestMapping(path = "db/api/forum/listThreads", method = RequestMethod.GET)
+    public ResponseEntity listThreads(@RequestParam(name = "forum") String forum,
+                                      @RequestParam(name = "limit", required = false) String strLimit,
+                                      @RequestParam(name = "order", required = false) String order,
+                                      @RequestParam(name = "since", required = false) String since,
+                                      @RequestParam(name = "related", required = false) List<String> related) {
+        if (StringUtils.isEmpty(forum)) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        int limit = -1;
+        if (!StringUtils.isEmpty(strLimit)) {
+            try {
+                limit = Integer.parseInt(strLimit);
+            } catch (NumberFormatException e) {
+                return SimpleResponse.BAD_REQUEST.response;
+            }
+        }
+
+        if (StringUtils.isEmpty(order)) {
+            order = "desc";
+        }
+        if (!order.equals("desc") && !order.equals("asc")) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        if (StringUtils.isEmpty(since)) {
+            since = null;
+        }
+
+        final List<Thread<?, ?>> threads = threadDAO.forumListThreads(forum, limit, since, order, Utility.contains(related, "user"), Utility.contains(related, "forum"));
+        if (threads == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(threads);
+    }
+
+    @RequestMapping(path = "db/api/forum/listUsers", method = RequestMethod.GET)
+    public ResponseEntity listUsers(@RequestParam(name = "forum") String forum,
+                                    @RequestParam(name = "limit", required = false) String strLimit,
+                                    @RequestParam(name = "order", required = false) String order,
+                                    @RequestParam(name = "since_id", required = false) String since) {
+        if (StringUtils.isEmpty(forum)) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        int limit = -1;
+        if (!StringUtils.isEmpty(strLimit)) {
+            try {
+                limit = Integer.parseInt(strLimit);
+            } catch (NumberFormatException e) {
+                return SimpleResponse.BAD_REQUEST.response;
+            }
+        }
+
+        if (StringUtils.isEmpty(order)) {
+            order = "desc";
+        }
+        if (!order.equals("desc") && !order.equals("asc")) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        if (StringUtils.isEmpty(since)) {
+            since = null;
+        }
+
+        final List<User> users = userDAO.forumListUsers(forum, limit, since, order);
+        if (users == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(users);
     }
 }
