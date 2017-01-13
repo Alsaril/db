@@ -186,7 +186,6 @@ public class PostDAO {
         return false;
     }
 
-
     public List<Post<?, ?, ?>> list(String thread, String forum, int limit, String since, String order) {
         final String source = "SELECT * FROM post";
         final StringBuilder query = new StringBuilder(source);

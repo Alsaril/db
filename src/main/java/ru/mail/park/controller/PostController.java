@@ -69,7 +69,7 @@ public class PostController {
 
     @RequestMapping(path = "db/api/post/details", method = RequestMethod.GET)
     public ResponseEntity details(@RequestParam("post") String strPost, @RequestParam(required = false) List<String> related) {
-        if (StringUtils.isEmpty(strPost)) {
+        if (StringUtils.isEmpty(strPost) || !Utility.check(related, "user", "thread", "forum")) {
             return SimpleResponse.INVALID_REQUEST.response;
         }
         final int postId;

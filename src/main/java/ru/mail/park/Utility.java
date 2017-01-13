@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Utility {
@@ -33,12 +35,13 @@ public class Utility {
     }
 
     public static <T> boolean contains(List<T> list, T elem) {
-        if (list == null) return false;
-        for (T t : list) {
-            if (t.equals(elem)) {
-                return true;
-            }
-        }
-        return false;
+        return list != null && list.contains(elem);
+    }
+
+    public static boolean check(List<String> list, String... elems) {
+        if (list == null || list.isEmpty()) return true;
+        final List<String> copy = new ArrayList<>(list);
+        copy.removeAll(Arrays.asList(elems));
+        return copy.isEmpty();
     }
 }

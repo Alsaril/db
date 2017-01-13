@@ -53,7 +53,7 @@ public class ThreadController {
 
     @RequestMapping(path = "db/api/thread/details", method = RequestMethod.GET)
     public ResponseEntity details(@RequestParam("thread") String strThread, @RequestParam(required = false) List<String> related) {
-        if (StringUtils.isEmpty(strThread)) {
+        if (StringUtils.isEmpty(strThread) || !Utility.check(related, "user", "forum")) {
             return SimpleResponse.INVALID_REQUEST.response;
         }
         final int threadId;

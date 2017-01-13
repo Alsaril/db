@@ -72,7 +72,7 @@ public class ForumController {
                                     @RequestParam(name = "order", required = false) String order,
                                     @RequestParam(name = "since", required = false) String since,
                                     @RequestParam(name = "related", required = false) List<String> related) {
-        if (StringUtils.isEmpty(forum)) {
+        if (StringUtils.isEmpty(forum) || !Utility.check(related, "user", "thread", "forum")) {
             return SimpleResponse.BAD_REQUEST.response;
         }
 
@@ -109,7 +109,7 @@ public class ForumController {
                                       @RequestParam(name = "order", required = false) String order,
                                       @RequestParam(name = "since", required = false) String since,
                                       @RequestParam(name = "related", required = false) List<String> related) {
-        if (StringUtils.isEmpty(forum)) {
+        if (StringUtils.isEmpty(forum) || !Utility.check(related, "user", "forum")) {
             return SimpleResponse.BAD_REQUEST.response;
         }
 
