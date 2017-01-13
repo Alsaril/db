@@ -4,10 +4,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import ru.mail.park.DAO.ForumDAO;
+import ru.mail.park.DAO.PostDAO;
 import ru.mail.park.DAO.ThreadDAO;
 import ru.mail.park.DAO.UserDAO;
 import ru.mail.park.Utility;
 import ru.mail.park.model.Forum;
+import ru.mail.park.model.Post;
 import ru.mail.park.model.Thread;
 import ru.mail.park.model.User;
 import ru.mail.park.request.*;
@@ -22,11 +24,13 @@ public class ThreadController {
     private final ThreadDAO threadDAO;
     private final ForumDAO forumDAO;
     private final UserDAO userDAO;
+    private final PostDAO postDAO;
 
-    public ThreadController(ThreadDAO threadDAO, ForumDAO forumDAO, UserDAO userDAO) {
+    public ThreadController(ThreadDAO threadDAO, ForumDAO forumDAO, UserDAO userDAO, PostDAO postDAO) {
         this.threadDAO = threadDAO;
         this.forumDAO = forumDAO;
         this.userDAO = userDAO;
+        this.postDAO = postDAO;
     }
 
     @RequestMapping(path = "db/api/thread/create", method = RequestMethod.POST)
@@ -210,5 +214,51 @@ public class ThreadController {
             return SimpleResponse.NOT_FOUND.response;
         }
         return CommonResponse.OK(threads);
+    }
+
+    @RequestMapping(path = "db/api/thread/listPosts", method = RequestMethod.GET)
+    public ResponseEntity listPosts(@RequestParam(name = "thread") int threadId,
+                                    @RequestParam(name = "limit", required = false) String strLimit,
+                                    @RequestParam(name = "order", required = false) String order,
+                                    @RequestParam(name = "since", required = false) String since,
+                                    @RequestParam(name = "sort", required = false) String sort) {
+        if (StringUtils.isEmpty(sort)) {
+            sort = "flat";
+        }
+
+        if (!sort.equals("flat") && !sort.equals("tree") && !sort.equals("parent_tree")) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        int limit = -1;
+        if (!StringUtils.isEmpty(strLimit)) {
+            try {
+                limit = Integer.parseInt(strLimit);
+            } catch (NumberFormatException e) {
+                return SimpleResponse.BAD_REQUEST.response;
+            }
+        }
+
+        if (StringUtils.isEmpty(order)) {
+            order = "desc";
+        }
+        if (!order.equals("desc") && !order.equals("asc")) {
+            return SimpleResponse.BAD_REQUEST.response;
+        }
+
+        if (StringUtils.isEmpty(since)) {
+            since = null;
+        }
+
+        final Thread<?, ?> thread = threadDAO.get(threadId, false, false);
+        if (thread == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+
+        final List<Post<?, ?, ?>> posts = postDAO.threadListPosts(thread, limit, since, order, sort);
+        if (posts == null) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(posts);
     }
 }

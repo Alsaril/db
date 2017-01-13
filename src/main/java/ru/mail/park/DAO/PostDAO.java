@@ -42,10 +42,10 @@ public class PostDAO {
                 final String query = "INSERT INTO post (parent_id, isApproved, isHighlighted, isEdited, isSpam, isDeleted, date, thread_id, message, user_id, forum_id) VALUES (?,?,?,?,?,?,?,?,?,?,?);";
                 final PreparedStatement pst = connection.prepareStatement(query,
                         Statement.RETURN_GENERATED_KEYS);
-                if (parent != null) {
-                    pst.setInt(1, parent.id);
-                } else {
+                if (parent == null) {
                     pst.setNull(1, Types.INTEGER);
+                } else {
+                    pst.setInt(1, parent.id);
                 }
                 pst.setBoolean(2, isApproved);
                 pst.setBoolean(3, isHighlighted);
@@ -64,7 +64,26 @@ public class PostDAO {
         }
         threadDAO.addPost(thread.id);
         thread.addPost();
-        return new Post<>(keyHolder.getKey().intValue(), date, thread, message, user, forum, parent == null ? null : parent.id, isApproved, isHighlighted, isEdited, isSpam, isDeleted, 0, 0, 0);
+
+        final int id = keyHolder.getKey().intValue();
+
+        final Integer root;
+        final String path;
+
+        if (parent == null) {
+            root = id;
+            path = "";
+        } else {
+            root = parent.root;
+            path = String.format("%s%08d", parent.path, id);
+        }
+        setPath(id, root, path);
+        return new Post<>(id, date, thread, message, user, forum, parent == null ? null : parent.id, root, isApproved, isHighlighted, isEdited, isSpam, isDeleted, 0, 0, 0, path);
+    }
+
+    private void setPath(int id, int root, String path) {
+        final String query = "UPDATE post SET root_id = ?, path = ? WHERE id = ?";
+        template.update(query, root, path, id);
     }
 
     private RowMapper<Post<?, ?, ?>> postMapper(boolean includeUser, boolean includeThread, boolean includeForum) {
@@ -76,6 +95,8 @@ public class PostDAO {
             final int userId = rs.getInt("user_id");
             final int forumId = rs.getInt("forum_id");
             final Integer parentId = (Integer) rs.getObject("parent_id");
+            final Integer rootId = (Integer) rs.getObject("root_id");
+            final String path = rs.getString("path");
             final boolean isApproved = rs.getBoolean("isApproved");
             final boolean isHighlighted = rs.getBoolean("isHighlighted");
             final boolean isEdited = rs.getBoolean("isEdited");
@@ -87,8 +108,7 @@ public class PostDAO {
             final Thread<?, ?> thread = threadDAO.get(threadId, includeUser, includeForum);
             final User user = userDAO.details(userId);
             final Forum<?> forum = forumDAO.get(forumId, includeUser);
-            final Post<?, ?, ?> parent = parentId == null ? null : get(parentId, false, false, false);
-            return new Post<>(id, date, includeThread ? thread : thread.id, message, includeUser ? user : user.email, includeForum ? forum : forum.short_name, parent == null ? null : parent.id, isApproved, isHighlighted, isEdited, isSpam, isDeleted, likes, dislikes, points);
+            return new Post<>(id, date, includeThread ? thread : thread.id, message, includeUser ? user : user.email, includeForum ? forum : forum.short_name, parentId, rootId, isApproved, isHighlighted, isEdited, isSpam, isDeleted, likes, dislikes, points, path);
         };
     }
 
@@ -183,5 +203,43 @@ public class PostDAO {
             query.append(" LIMIT ").append(limit);
         }
         return template.query(query.toString(), postMapper(false, false, false), StringUtils.isEmpty(thread) ? forum : thread);
+    }
+
+    public List<Post<?, ?, ?>> threadListPosts(Thread<?, ?> thread, int limit, String since, String order, String sort) {
+        if (sort.equals("flat")) {
+            final String source = "SELECT * FROM post WHERE thread_id = ?";
+            final StringBuilder query = new StringBuilder(source);
+            if (since != null) {
+                query.append(" AND date >= '").append(since).append('\'');
+            }
+            query.append(" ORDER BY date ").append(order);
+            if (limit != -1) {
+                query.append(" LIMIT ").append(limit);
+            }
+            return template.query(query.toString(), postMapper(false, false, false), thread.id);
+        } else if (sort.equals("tree")) {
+            final String source = "SELECT * FROM post WHERE thread_id = ?";
+            final StringBuilder query = new StringBuilder(source);
+            if (since != null) {
+                query.append(" AND date >= '").append(since).append('\'');
+            }
+            query.append(" ORDER BY root_id ").append(order).append(", path ASC");
+            if (limit != -1) {
+                query.append(" LIMIT ").append(limit);
+            }
+            return template.query(query.toString(), postMapper(false, false, false), thread.id);
+        } else {
+            final String source = "SELECT * FROM post p JOIN (SELECT * FROM post WHERE thread_id = ? AND parent_id IS NULL";
+            final StringBuilder query = new StringBuilder(source);
+            if (limit != -1) {
+                query.append(" LIMIT ").append(limit);
+            }
+            query.append(") r ON p.root_id = r.id WHERE p.thread_id = ?");
+            if (since != null) {
+                query.append(" AND p.date >= '").append(since).append('\'');
+            }
+            query.append(" ORDER BY p.root_id ").append(order).append(", p.path ASC");
+            return template.query(query.toString(), postMapper(false, false, false), thread.id, thread.id);
+        }
     }
 }
