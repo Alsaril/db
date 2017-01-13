@@ -146,4 +146,22 @@ public class PostDAO {
         }
         return get(id, false, false, false);
     }
+
+    public boolean remove(int id) {
+        final String query = "UPDATE post SET isDeleted = 1 WHERE id = ?";
+        if (template.update(query, id) != 0) {
+            template.update("UPDATE thread t JOIN post p ON t.id = p.thread_id SET t.posts = t.posts - 1 WHERE p.id = ?", id);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean restore(int id) {
+        final String query = "UPDATE post SET isDeleted = 0 WHERE id = ?";
+        if (template.update(query, id) != 0) {
+            template.update("UPDATE thread t JOIN post p ON t.id = p.thread_id SET t.posts = t.posts + 1 WHERE p.id = ?", id);
+            return true;
+        }
+        return false;
+    }
 }

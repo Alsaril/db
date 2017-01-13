@@ -99,16 +99,19 @@ public class ThreadDAO {
     }
 
     public boolean remove(int id) {
-        final String query = "UPDATE thread SET isDeleted = 1 WHERE id = ?";
-        return template.update(query, id) != 0; // remove posts
+        final String query = "UPDATE thread SET isDeleted = 1, posts = 0 WHERE id = ?";
+        if (template.update(query, id) == 0) return false;
+        template.update("UPDATE post SET isDeleted = 1 WHERE thread_id = ?", id);
+        return true;
     }
 
     public boolean restore(int id) {
-        final String query = "UPDATE thread SET isDeleted = 0 WHERE id = ?";
-        return template.update(query, id) != 0; //restore posts
+        final int count = template.update("UPDATE post SET isDeleted = 0 WHERE thread_id = ?", id);
+        final String query = "UPDATE thread SET isDeleted = 0, posts = ? WHERE id = ?";
+        return template.update(query, count, id) != 0;
     }
 
-    public boolean subscibe(String email, int id) { // 3 queries
+    public boolean subscibe(String email, int id) {
         final User user = userDAO.fromEmail(email);
         final Thread<?, ?> thread = get(id, false, false);
         if (user == null || thread == null) return false;

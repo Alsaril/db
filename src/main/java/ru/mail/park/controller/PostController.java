@@ -13,6 +13,7 @@ import ru.mail.park.model.Post;
 import ru.mail.park.model.Thread;
 import ru.mail.park.model.User;
 import ru.mail.park.request.PostCreateRequest;
+import ru.mail.park.request.PostStatusRequest;
 import ru.mail.park.request.PostUpdateRequest;
 import ru.mail.park.request.PostVoteRequest;
 import ru.mail.park.response.CommonResponse;
@@ -114,5 +115,29 @@ public class PostController {
             return SimpleResponse.NOT_FOUND.response;
         }
         return CommonResponse.OK(post);
+    }
+
+    @RequestMapping(path = "db/api/post/remove", method = RequestMethod.POST)
+    public ResponseEntity remove(@RequestBody String body) {
+        final PostStatusRequest psr = Utility.j2o(body, PostStatusRequest.class);
+        if (psr == null) {
+            return SimpleResponse.INVALID_REQUEST.response;
+        }
+        if (!postDAO.remove(psr.post)) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(psr);
+    }
+
+    @RequestMapping(path = "db/api/post/restore", method = RequestMethod.POST)
+    public ResponseEntity restore(@RequestBody String body) {
+        final PostStatusRequest psr = Utility.j2o(body, PostStatusRequest.class);
+        if (psr == null) {
+            return SimpleResponse.INVALID_REQUEST.response;
+        }
+        if (!postDAO.restore(psr.post)) {
+            return SimpleResponse.NOT_FOUND.response;
+        }
+        return CommonResponse.OK(psr);
     }
 }
