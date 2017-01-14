@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS profile (
   name        VARCHAR(255) NULL,
   email       VARCHAR(255) NOT NULL UNIQUE,
   isAnonymous BOOLEAN      NOT NULL,
-  INDEX (name(20))
+  INDEX (name)
 )
   CHARACTER SET utf8
   DEFAULT COLLATE utf8_general_ci;
@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS thread (
   points    INT          NOT NULL DEFAULT 0,
   posts     INT          NOT NULL DEFAULT 0,
   FOREIGN KEY (forum_id) REFERENCES forum (id),
-  FOREIGN KEY (user_id) REFERENCES profile (id)
+  FOREIGN KEY (user_id) REFERENCES profile (id),
+  INDEX (forum_id, date)
 )
   CHARACTER SET utf8
   DEFAULT COLLATE utf8_general_ci;
@@ -67,7 +68,8 @@ CREATE TABLE IF NOT EXISTS post (
   INDEX (thread_id, date),
   INDEX (thread_id, parent_id, id),
   INDEX (thread_id, root_id, date),
-  INDEX (thread_id, root_id, path)
+  INDEX (thread_id, root_id, path),
+  INDEX (forum_id, date)
 )
   CHARACTER SET utf8
   DEFAULT COLLATE utf8_general_ci;
