@@ -150,7 +150,7 @@ public class ThreadDAO {
         if (StringUtils.isEmpty(email)) {
             query.append(" forum f ON f.id = t.forum_id WHERE f.shortname = ?");
         } else {
-            query.append(" user u ON u.id = t.user_id WHERE u.email = ?");
+            query.append(" profile u ON u.id = t.user_id WHERE u.email = ?");
         }
         if (since != null) {
             query.append(" AND t.date >= '").append(since).append('\'');

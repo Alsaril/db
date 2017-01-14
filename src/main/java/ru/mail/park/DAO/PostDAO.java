@@ -67,7 +67,7 @@ public class PostDAO {
         final int id = keyHolder.getKey().intValue();
 
         final String query = "UPDATE thread SET posts = posts + 1 WHERE id = ?";
-        template.update(query, id);
+        template.update(query, thread.id);
 
         final Integer root;
         final String path;
@@ -107,9 +107,9 @@ public class PostDAO {
             final int likes = rs.getInt("likes");
             final int dislikes = rs.getInt("dislikes");
             final int points = rs.getInt("points");
-            final Thread<?, ?> thread = threadDAO.get(threadId, includeUser, includeForum);
+            final Thread<?, ?> thread = threadDAO.get(threadId, false, false);
             final User user = userDAO.details(userId);
-            final Forum<?> forum = forumDAO.get(forumId, includeUser);
+            final Forum<?> forum = forumDAO.get(forumId, false);
             return new Post<>(id, date, includeThread ? thread : thread.id, message, includeUser ? user : user.email, includeForum ? forum : forum.short_name, parentId, rootId, isApproved, isHighlighted, isEdited, isSpam, isDeleted, likes, dislikes, points, path);
         };
     }
@@ -132,7 +132,7 @@ public class PostDAO {
     }
 
     public List<Post<?, ?, ?>> userListPosts(String email, int limit, String since, String order) {
-        final String source = "SELECT * FROM post p JOIN user u ON p.user_id = u.id WHERE u.email = ?";
+        final String source = "SELECT * FROM post p JOIN profile u ON p.user_id = u.id WHERE u.email = ?";
         final StringBuilder query = new StringBuilder(source);
         if (since != null) {
             query.append(" AND p.date >= '").append(since).append('\'');

@@ -37,7 +37,7 @@ public class UserDAO {
         final KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
             template.update(connection -> {
-                final String query = "INSERT INTO user (username, about, name, email, isAnonymous) VALUES (?,?,?,?,?);";
+                final String query = "INSERT INTO profile (username, about, name, email, isAnonymous) VALUES (?,?,?,?,?);";
                 final PreparedStatement pst = connection.prepareStatement(query,
                         Statement.RETURN_GENERATED_KEYS);
                 pst.setString(1, username);
@@ -54,7 +54,7 @@ public class UserDAO {
     }
 
     public ExtendedUser update(String email, String name, String about) {
-        final String query = "UPDATE user SET name = ?, about = ? WHERE email = ?;";
+        final String query = "UPDATE profile SET name = ?, about = ? WHERE email = ?;";
         if (template.update(query, name, about, email) == 0) {
             return null;
         }
@@ -64,7 +64,7 @@ public class UserDAO {
     public User fromEmail(String email) {
         final User user;
         try {
-            final String userQuery = "SELECT * FROM user WHERE email = ?";
+            final String userQuery = "SELECT * FROM profile WHERE email = ?";
             user = template.queryForObject(userQuery, userMapper, email);
         } catch (EmptyResultDataAccessException e) {
             return null;
@@ -75,7 +75,7 @@ public class UserDAO {
     public User get(int id) {
         final User user;
         try {
-            final String userQuery = "SELECT * FROM user WHERE id = ?";
+            final String userQuery = "SELECT * FROM profile WHERE id = ?";
             user = template.queryForObject(userQuery, userMapper, id);
         } catch (EmptyResultDataAccessException e) {
             return null;
@@ -93,9 +93,9 @@ public class UserDAO {
 
     public ExtendedUser details(User user) {
         if (user == null) return null;
-        final String followersQuery = "SELECT u.email FROM user u JOIN follow f ON u.id = f.follower_id WHERE followee_id = ?";
+        final String followersQuery = "SELECT u.email FROM profile u JOIN follow f ON u.id = f.follower_id WHERE followee_id = ?";
         final List<String> followers = template.queryForList(followersQuery, String.class, user.id);
-        final String followingQuery = "SELECT u.email FROM user u JOIN follow f ON u.id = f.followee_id WHERE follower_id = ?";
+        final String followingQuery = "SELECT u.email FROM profile u JOIN follow f ON u.id = f.followee_id WHERE follower_id = ?";
         final List<String> following = template.queryForList(followingQuery, String.class, user.id);
         final String subscrQuery = "SELECT thread_id FROM subscription WHERE user_id = ?";
         final List<Integer> subscriptions = template.queryForList(subscrQuery, Integer.class, user.id);
@@ -117,7 +117,7 @@ public class UserDAO {
     public List<ExtendedUser> listFollowing(String email, int limit, int since, String order) {
         final User source = fromEmail(email);
         if (source == null) return null;
-        final String query = updateQuery("SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM user u JOIN follow f ON u.id = f.followee_id WHERE follower_id = ?", limit, since, order);
+        final String query = updateQuery("SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM profile u JOIN follow f ON u.id = f.followee_id WHERE follower_id = ?", limit, since, order);
         final List<User> following = template.query(query, userMapper, source.id);
         return following.stream().map(this::details).collect(Collectors.toList());
     }
@@ -125,7 +125,7 @@ public class UserDAO {
     public List<ExtendedUser> listFollowers(String email, int limit, int since, String order) {
         final User source = fromEmail(email);
         if (source == null) return null;
-        final String query = updateQuery("SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM user u JOIN follow f ON u.id = f.follower_id WHERE followee_id = ?", limit, since, order);
+        final String query = updateQuery("SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM profile u JOIN follow f ON u.id = f.follower_id WHERE followee_id = ?", limit, since, order);
         final List<User> following = template.query(query, userMapper, source.id);
         return following.stream().map(this::details).collect(Collectors.toList());
     }
@@ -154,7 +154,7 @@ public class UserDAO {
     }
 
     public List<User> forumListUsers(String forum, int limit, String since, String order) {
-        final String source = "SELECT DISTINCT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM user u JOIN post p on u.id = p.user_id JOIN forum f ON f.id = p.forum_id WHERE f.shortname = ?";
+        final String source = "SELECT DISTINCT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM profile u JOIN post p on u.id = p.user_id JOIN forum f ON f.id = p.forum_id WHERE f.shortname = ?";
         final StringBuilder query = new StringBuilder(source);
         if (since != null) {
             query.append(" AND u.id >= ").append(since);

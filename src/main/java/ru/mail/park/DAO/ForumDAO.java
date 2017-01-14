@@ -61,7 +61,7 @@ public class ForumDAO {
     public Forum<?> fromShortName(String shortName, boolean includeUser) {
         try {
             return template.queryForObject(
-                    "SELECT f.id AS id, f.name AS name, u.email AS email, f.shortname AS shortname FROM forum f JOIN user u ON u.id = f.user_id WHERE f.shortname = ?",
+                    "SELECT f.id AS id, f.name AS name, u.email AS email, f.shortname AS shortname FROM forum f JOIN profile u ON u.id = f.user_id WHERE f.shortname = ?",
                     forumMapper(includeUser), shortName);
         } catch (EmptyResultDataAccessException e) {
             return null;
@@ -71,7 +71,7 @@ public class ForumDAO {
     public Forum<?> get(int id, boolean includeUser) {
         try {
             return template.queryForObject(
-                    "SELECT f.id AS id, f.name AS name, u.email AS email, f.shortname AS shortname FROM forum f JOIN user u ON u.id = f.user_id WHERE f.id = ?",
+                    "SELECT f.id AS id, f.name AS name, u.email AS email, f.shortname AS shortname FROM forum f JOIN profile u ON u.id = f.user_id WHERE f.id = ?",
                     forumMapper(includeUser), id);
         } catch (EmptyResultDataAccessException e) {
             return null;
