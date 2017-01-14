@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS profile (
   about       TEXT         NULL,
   name        VARCHAR(255) NULL,
   email       VARCHAR(255) NOT NULL UNIQUE,
-  isAnonymous BOOLEAN      NOT NULL
+  isAnonymous BOOLEAN      NOT NULL,
+  INDEX (name(20))
 )
   CHARACTER SET utf8
   DEFAULT COLLATE utf8_general_ci;
@@ -15,7 +16,7 @@ CREATE TABLE IF NOT EXISTS forum (
   shortname VARCHAR(255) NOT NULL,
   user_id   INT          NOT NULL,
   FOREIGN KEY (user_id) REFERENCES profile (id),
-  UNIQUE INDEX un_shortname(shortname)
+  UNIQUE INDEX (shortname(20))
 )
   CHARACTER SET utf8
   DEFAULT COLLATE utf8_general_ci;
@@ -62,7 +63,11 @@ CREATE TABLE IF NOT EXISTS post (
   FOREIGN KEY (root_id) REFERENCES post (id),
   FOREIGN KEY (thread_id) REFERENCES thread (id),
   FOREIGN KEY (user_id) REFERENCES profile (id),
-  FOREIGN KEY (forum_id) REFERENCES forum (id)
+  FOREIGN KEY (forum_id) REFERENCES forum (id),
+  INDEX (thread_id, date),
+  INDEX (thread_id, parent_id, id),
+  INDEX (thread_id, root_id, date),
+  INDEX (thread_id, root_id, path)
 )
   CHARACTER SET utf8
   DEFAULT COLLATE utf8_general_ci;
@@ -73,7 +78,7 @@ CREATE TABLE IF NOT EXISTS follow (
   follower_id INT NOT NULL,
   FOREIGN KEY (followee_id) REFERENCES profile (id),
   FOREIGN KEY (follower_id) REFERENCES profile (id),
-  UNIQUE INDEX follow_unique (followee_id, follower_id),
+  UNIQUE INDEX (followee_id, follower_id),
   INDEX (follower_id, followee_id)
 );
 
@@ -101,7 +106,7 @@ CREATE TABLE IF NOT EXISTS subscription (
   user_id   INT NOT NULL,
   FOREIGN KEY (thread_id) REFERENCES thread (id),
   FOREIGN KEY (user_id) REFERENCES profile (id),
-  UNIQUE INDEX subscription_unique (thread_id, user_id)
+  UNIQUE INDEX (thread_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS user_forum (
@@ -110,5 +115,5 @@ CREATE TABLE IF NOT EXISTS user_forum (
   user_id  INT NOT NULL,
   FOREIGN KEY (forum_id) REFERENCES forum (id),
   FOREIGN KEY (user_id) REFERENCES profile (id),
-  UNIQUE INDEX user_forum_unique (forum_id, user_id)
+  UNIQUE INDEX (forum_id, user_id)
 );

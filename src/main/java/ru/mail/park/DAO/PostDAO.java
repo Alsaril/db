@@ -237,7 +237,7 @@ public class PostDAO {
                 return template.query(query.toString(), postMapper(false, false, false), thread.id);
             }
             default: {
-                final String source = "SELECT * FROM post p JOIN (SELECT * FROM post WHERE thread_id = ? AND parent_id IS NULL";
+                final String source = "SELECT * FROM post p JOIN (SELECT id FROM post WHERE thread_id = ? AND parent_id IS NULL";
                 final StringBuilder query = new StringBuilder(source);
                 if (limit != -1) {
                     query.append(" LIMIT ").append(limit);
