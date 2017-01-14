@@ -67,7 +67,8 @@ public class PostDAO {
 
         final int id = keyHolder.getKey().intValue();
 
-        template.update("UPDATE thread SET posts = posts + 1 WHERE id = ?", thread.id);
+        template.execute("COMMIT");
+        template.update("UPDATE thread SET posts = ? WHERE id = ?", thread.posts, thread.id);
         try {
             template.update("INSERT INTO user_forum (forum_id, user_id) VALUES (?, ?)", forum.id, user.id);
         } catch (DuplicateKeyException e) {
