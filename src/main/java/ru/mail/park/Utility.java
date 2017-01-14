@@ -39,9 +39,9 @@ public class Utility {
     }
 
     public static boolean check(List<String> list, String... elems) {
-        if (list == null || list.isEmpty()) return true;
+        if (list == null || list.isEmpty()) return false;
         final List<String> copy = new ArrayList<>(list);
         copy.removeAll(Arrays.asList(elems));
-        return copy.isEmpty();
+        return !copy.isEmpty();
     }
 }

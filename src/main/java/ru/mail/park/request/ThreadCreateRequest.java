@@ -31,6 +31,7 @@ public class ThreadCreateRequest {
         this.isDeleted = isDeleted;
     }
 
+    @SuppressWarnings("OverlyComplexBooleanExpression")
     public boolean isValid() {
         return !StringUtils.isEmpty(forum) &&
                 !StringUtils.isEmpty(title) &&

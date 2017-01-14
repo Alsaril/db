@@ -56,6 +56,7 @@ public class PostDAO {
                 pst.setInt(8, thread.id);
                 pst.setString(9, message);
                 pst.setInt(10, user.id);
+                //noinspection MagicNumber
                 pst.setInt(11, forum.id);
                 return pst;
             }, keyHolder);
@@ -66,8 +67,11 @@ public class PostDAO {
 
         final int id = keyHolder.getKey().intValue();
 
-        final String query = "UPDATE thread SET posts = posts + 1 WHERE id = ?";
-        template.update(query, thread.id);
+        template.update("UPDATE thread SET posts = posts + 1 WHERE id = ?", thread.id);
+        try {
+            template.update("INSERT INTO user_forum (forum_id, user_id) VALUES (?, ?)", forum.id, user.id);
+        } catch (DuplicateKeyException e) {
+        }
 
         final Integer root;
         final String path;
@@ -207,40 +211,44 @@ public class PostDAO {
     }
 
     public List<Post<?, ?, ?>> threadListPosts(Thread<?, ?> thread, int limit, String since, String order, String sort) {
-        if (sort.equals("flat")) {
-            final String source = "SELECT * FROM post WHERE thread_id = ?";
-            final StringBuilder query = new StringBuilder(source);
-            if (since != null) {
-                query.append(" AND date >= '").append(since).append('\'');
+        switch (sort) {
+            case "flat": {
+                final String source = "SELECT * FROM post WHERE thread_id = ?";
+                final StringBuilder query = new StringBuilder(source);
+                if (since != null) {
+                    query.append(" AND date >= '").append(since).append('\'');
+                }
+                query.append(" ORDER BY date ").append(order);
+                if (limit != -1) {
+                    query.append(" LIMIT ").append(limit);
+                }
+                return template.query(query.toString(), postMapper(false, false, false), thread.id);
             }
-            query.append(" ORDER BY date ").append(order);
-            if (limit != -1) {
-                query.append(" LIMIT ").append(limit);
+            case "tree": {
+                final String source = "SELECT * FROM post WHERE thread_id = ?";
+                final StringBuilder query = new StringBuilder(source);
+                if (since != null) {
+                    query.append(" AND date >= '").append(since).append('\'');
+                }
+                query.append(" ORDER BY root_id ").append(order).append(", path ASC");
+                if (limit != -1) {
+                    query.append(" LIMIT ").append(limit);
+                }
+                return template.query(query.toString(), postMapper(false, false, false), thread.id);
             }
-            return template.query(query.toString(), postMapper(false, false, false), thread.id);
-        } else if (sort.equals("tree")) {
-            final String source = "SELECT * FROM post WHERE thread_id = ?";
-            final StringBuilder query = new StringBuilder(source);
-            if (since != null) {
-                query.append(" AND date >= '").append(since).append('\'');
+            default: {
+                final String source = "SELECT * FROM post p JOIN (SELECT * FROM post WHERE thread_id = ? AND parent_id IS NULL";
+                final StringBuilder query = new StringBuilder(source);
+                if (limit != -1) {
+                    query.append(" LIMIT ").append(limit);
+                }
+                query.append(") r ON p.root_id = r.id WHERE p.thread_id = ?");
+                if (since != null) {
+                    query.append(" AND p.date >= '").append(since).append('\'');
+                }
+                query.append(" ORDER BY p.root_id ").append(order).append(", p.path ASC");
+                return template.query(query.toString(), postMapper(false, false, false), thread.id, thread.id);
             }
-            query.append(" ORDER BY root_id ").append(order).append(", path ASC");
-            if (limit != -1) {
-                query.append(" LIMIT ").append(limit);
-            }
-            return template.query(query.toString(), postMapper(false, false, false), thread.id);
-        } else {
-            final String source = "SELECT * FROM post p JOIN (SELECT * FROM post WHERE thread_id = ? AND parent_id IS NULL";
-            final StringBuilder query = new StringBuilder(source);
-            if (limit != -1) {
-                query.append(" LIMIT ").append(limit);
-            }
-            query.append(") r ON p.root_id = r.id WHERE p.thread_id = ?");
-            if (since != null) {
-                query.append(" AND p.date >= '").append(since).append('\'');
-            }
-            query.append(" ORDER BY p.root_id ").append(order).append(", p.path ASC");
-            return template.query(query.toString(), postMapper(false, false, false), thread.id, thread.id);
         }
     }
 }

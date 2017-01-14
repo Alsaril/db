@@ -151,6 +151,7 @@ public class UserController {
         return CommonResponse.OK(user);
     }
 
+    @SuppressWarnings("OverlyComplexMethod")
     private ResponseEntity commonFollowList(boolean type, String email, String strLimit, String order, String strSince) {
         if (StringUtils.isEmpty(email)) {
             return SimpleResponse.BAD_REQUEST.response;

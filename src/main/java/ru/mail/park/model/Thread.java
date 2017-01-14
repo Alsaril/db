@@ -10,9 +10,9 @@ public class Thread<U, F> {
     public final String message;
     public final String slug;
     public final boolean isDeleted;
-    public int likes;
-    public int dislikes;
-    public int points;
+    public final int likes;
+    public final int dislikes;
+    public final int points;
     public int posts;
 
     public Thread(int id, F forum, String title, boolean isClosed, U user, String date, String message, String slug, boolean isDeleted, int likes, int dislikes, int points, int posts) {

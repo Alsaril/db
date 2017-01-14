@@ -21,9 +21,9 @@ public class Post<U, T, F> {
     public final boolean isSpam;
     public final boolean isDeleted;
 
-    public int likes;
-    public int dislikes;
-    public int points;
+    public final int likes;
+    public final int dislikes;
+    public final int points;
 
     public Post(int id, String date, T thread, String message, U user, F forum, Integer parent, Integer root, boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted, int likes, int dislikes, int points, String path) {
         this.id = id;

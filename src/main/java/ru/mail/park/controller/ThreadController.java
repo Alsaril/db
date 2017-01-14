@@ -53,7 +53,7 @@ public class ThreadController {
 
     @RequestMapping(path = "db/api/thread/details", method = RequestMethod.GET)
     public ResponseEntity details(@RequestParam("thread") String strThread, @RequestParam(required = false) List<String> related) {
-        if (StringUtils.isEmpty(strThread) || !Utility.check(related, "user", "forum")) {
+        if (StringUtils.isEmpty(strThread) || Utility.check(related, "user", "forum")) {
             return SimpleResponse.INVALID_REQUEST.response;
         }
         final int threadId;
@@ -139,7 +139,7 @@ public class ThreadController {
         if (tsr == null) {
             return SimpleResponse.INVALID_REQUEST.response;
         }
-        if (!tsr.isValid()) {
+        if (tsr.isValid()) {
             return SimpleResponse.BAD_REQUEST.response;
         }
         if (!threadDAO.subscibe(tsr.user, tsr.thread)) {
@@ -154,7 +154,7 @@ public class ThreadController {
         if (tsr == null) {
             return SimpleResponse.INVALID_REQUEST.response;
         }
-        if (!tsr.isValid()) {
+        if (tsr.isValid()) {
             return SimpleResponse.BAD_REQUEST.response;
         }
         if (!threadDAO.unsubscibe(tsr.user, tsr.thread)) {
@@ -216,6 +216,7 @@ public class ThreadController {
         return CommonResponse.OK(threads);
     }
 
+    @SuppressWarnings("OverlyComplexMethod")
     @RequestMapping(path = "db/api/thread/listPosts", method = RequestMethod.GET)
     public ResponseEntity listPosts(@RequestParam(name = "thread") int threadId,
                                     @RequestParam(name = "limit", required = false) String strLimit,

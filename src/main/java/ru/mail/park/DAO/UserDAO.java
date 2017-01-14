@@ -146,7 +146,7 @@ public class UserDAO {
     public ExtendedUser unfollow(String follower, String followee) {
         final User r = fromEmail(follower);
         final User e = fromEmail(followee);
-        if (r == null || e == null || followee.equals(follower)) return null; //TODO differ equality
+        if (r == null || e == null || followee.equals(follower)) return null;
 
         final String query = "DELETE FROM follow WHERE follower_id = ? AND followee_id = ?;";
         template.update(query, r.id, e.id);
@@ -154,7 +154,7 @@ public class UserDAO {
     }
 
     public List<User> forumListUsers(String forum, int limit, String since, String order) {
-        final String source = "SELECT DISTINCT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM profile u JOIN post p on u.id = p.user_id JOIN forum f ON f.id = p.forum_id WHERE f.shortname = ?";
+        final String source = "SELECT u.id, u.username, u.about, u.name, u.email, u.isAnonymous FROM profile u JOIN user_forum uf on u.id = uf.user_id JOIN forum f ON f.id = uf.forum_id WHERE f.shortname = ?";
         final StringBuilder query = new StringBuilder(source);
         if (since != null) {
             query.append(" AND u.id >= ").append(since);

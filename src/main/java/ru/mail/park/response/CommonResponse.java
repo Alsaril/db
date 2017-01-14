@@ -5,7 +5,7 @@ import ru.mail.park.Utility;
 
 public class CommonResponse<T> {
     public final T response;
-    public int code;
+    public final int code;
 
     CommonResponse(SimpleResponse code, T response) {
         this.code = code.code;
@@ -13,7 +13,7 @@ public class CommonResponse<T> {
     }
 
     public static <T> ResponseEntity<?> OK(T t) {
-        return new CommonResponse<T>(SimpleResponse.OK, t).response();
+        return new CommonResponse<>(SimpleResponse.OK, t).response();
     }
 
     public ResponseEntity response() {

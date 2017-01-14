@@ -26,7 +26,7 @@ public class CommonDAO {
     }
 
     public HashMap<String, Integer> status() {
-        HashMap<String, Integer> result = new HashMap<>();
+        final HashMap<String, Integer> result = new HashMap<>();
         for (String s : DATA_TABLES) {
             result.put(s, template.queryForObject("SELECT COUNT(*) FROM " + s, Integer.class));
         }

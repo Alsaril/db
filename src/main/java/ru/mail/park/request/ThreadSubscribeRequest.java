@@ -14,7 +14,7 @@ public class ThreadSubscribeRequest {
     }
 
     public boolean isValid() {
-        return !StringUtils.isEmpty(user);
+        return StringUtils.isEmpty(user);
     }
 
 }
