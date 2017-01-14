@@ -30,6 +30,8 @@ public class CommonDAO {
         for (String s : DATA_TABLES) {
             result.put(s, template.queryForObject("SELECT COUNT(*) FROM " + s, Integer.class));
         }
+        result.put("user", result.get("profile"));
+        result.remove("profile");
         return result;
     }
 }
